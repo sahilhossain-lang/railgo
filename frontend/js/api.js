@@ -372,20 +372,32 @@ const RailGoAPI = (() => {
   async function searchTrains(params = {}) {
     const { from = 'New Delhi (NDLS)', to = 'Mumbai Central (MMCT)', date = '20 Nov 2026', travelClass = 'all' } = params;
 
-    if (!USE_MOCK_FALLBACK) {
-      try {
-        const query = new URLSearchParams({
-          from: from,
-          to: to,
-          date: date,
-          class: travelClass
-        });
-        const res = await fetch(`${BASE_URL}/api/search_trains.php?${query.toString()}`);
-        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-        return await res.json();
-      } catch (err) {
-        console.warn('Backend search API failed, using mock fallback:', err.message);
+    // 1. Attempt Real PHP Backend API
+    try {
+      const query = new URLSearchParams({
+        from: from,
+        to: to,
+        date: date,
+        class: travelClass
+      });
+      const res = await fetch(`${BASE_URL}/api/search_trains.php?${query.toString()}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
+          return {
+            status: 'success',
+            total: json.data.length,
+            from: from,
+            to: to,
+            date: date,
+            class: travelClass,
+            trains: json.data,
+            data: json.data
+          };
+        }
       }
+    } catch (err) {
+      console.info('Backend search API unavailable, using offline fallback:', err.message);
     }
 
     // Mock network delay
@@ -424,7 +436,8 @@ const RailGoAPI = (() => {
       to: to,
       date: date,
       class: travelClass,
-      trains: results
+      trains: results,
+      data: results
     };
   }
 
@@ -433,18 +446,27 @@ const RailGoAPI = (() => {
    * POST /api/book_ticket.php
    */
   async function bookTicket(bookingData) {
-    if (!USE_MOCK_FALLBACK) {
-      try {
-        const res = await fetch(`${BASE_URL}/api/book_ticket.php`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(bookingData)
-        });
-        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-        return await res.json();
-      } catch (err) {
-        console.warn('Backend book API failed, using mock fallback:', err.message);
+    // 1. Attempt Real PHP Backend API
+    try {
+      const res = await fetch(`${BASE_URL}/api/book_ticket.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          saveBooking(json.data.pnr, json.data);
+          return {
+            status: 'success',
+            pnr: json.data.pnr,
+            ticket: json.data,
+            data: json.data
+          };
+        }
       }
+    } catch (err) {
+      console.info('Backend book API unavailable, using offline booking engine:', err.message);
     }
 
     // Mock network latency
@@ -494,7 +516,8 @@ const RailGoAPI = (() => {
     return {
       status: 'success',
       pnr: random10DigitPNR,
-      ticket: newTicket
+      ticket: newTicket,
+      data: newTicket
     };
   }
 
@@ -503,20 +526,29 @@ const RailGoAPI = (() => {
    * GET /api/check_pnr.php?pnr=
    */
   async function checkPNR(pnr) {
-    if (!USE_MOCK_FALLBACK) {
-      try {
-        const res = await fetch(`${BASE_URL}/api/check_pnr.php?pnr=${encodeURIComponent(pnr)}`);
-        if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-        return await res.json();
-      } catch (err) {
-        console.warn('Backend check PNR failed, using mock fallback:', err.message);
+    const cleanPNR = String(pnr).trim();
+
+    // 1. Attempt Real PHP Backend API
+    try {
+      const res = await fetch(`${BASE_URL}/api/check_pnr.php?pnr=${encodeURIComponent(cleanPNR)}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.status === 'success' && json.data) {
+          saveBooking(cleanPNR, json.data);
+          return {
+            status: 'success',
+            pnr: cleanPNR,
+            data: json.data
+          };
+        }
       }
+    } catch (err) {
+      console.info('Backend check PNR unavailable, using offline store:', err.message);
     }
 
     await new Promise(r => setTimeout(r, 450));
 
     const store = getBookingsStore();
-    const cleanPNR = String(pnr).trim();
 
     if (store[cleanPNR]) {
       return {
@@ -563,6 +595,86 @@ const RailGoAPI = (() => {
     };
   }
 
+  /**
+   * Cancel Ticket API
+   * POST /api/cancel_ticket.php
+   */
+  async function cancelTicket(pnr) {
+    const cleanPNR = String(pnr).trim();
+    try {
+      const res = await fetch(`${BASE_URL}/api/cancel_ticket.php`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pnr: cleanPNR })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      // Local fallback
+    }
+
+    const store = getBookingsStore();
+    if (store[cleanPNR]) {
+      store[cleanPNR].status = 'Cancelled';
+      store[cleanPNR].status_label = 'Cancelled';
+      (store[cleanPNR].passengers || []).forEach(p => p.status = 'Cancelled');
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      return { status: 'success', message: 'Ticket cancelled successfully.' };
+    }
+    return { status: 'error', message: 'Record not found to cancel.' };
+  }
+
+  /**
+   * Booking History API
+   * GET /api/booking_history.php
+   */
+  async function getBookingHistory(limit = 10) {
+    try {
+      const res = await fetch(`${BASE_URL}/api/booking_history.php?limit=${limit}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
+
+    const store = getBookingsStore();
+    return {
+      status: 'success',
+      data: Object.values(store)
+    };
+  }
+
+  /**
+   * Auth APIs
+   */
+  async function login(email, password) {
+    const res = await fetch(`${BASE_URL}/api/login.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    return await res.json();
+  }
+
+  async function register(name, email, password) {
+    const res = await fetch(`${BASE_URL}/api/register.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password })
+    });
+    return await res.json();
+  }
+
+  async function logout() {
+    const res = await fetch(`${BASE_URL}/api/logout.php`, { method: 'POST' });
+    return await res.json();
+  }
+
+  async function checkAuth() {
+    const res = await fetch(`${BASE_URL}/api/auth_check.php`);
+    return await res.json();
+  }
+
   return {
     setBaseUrl: (url) => { BASE_URL = url; },
     setUseMock: (flag) => { USE_MOCK_FALLBACK = Boolean(flag); },
@@ -570,7 +682,13 @@ const RailGoAPI = (() => {
     escapeHTML,
     searchTrains,
     bookTicket,
-    checkPNR
+    checkPNR,
+    cancelTicket,
+    getBookingHistory,
+    login,
+    register,
+    logout,
+    checkAuth
   };
 })();
 

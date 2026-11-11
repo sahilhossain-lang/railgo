@@ -12,3 +12,6 @@ inspect_*.js
 Thumbs.db
 .vscode/
 .idea/
+
+
+*.bak
