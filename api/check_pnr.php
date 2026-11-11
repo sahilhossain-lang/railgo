@@ -40,3 +40,4 @@ try {
     error_log("Check PNR error: " . $e->getMessage());
     sendJsonResponse(false, null, 'Failed to retrieve PNR details: ' . $e->getMessage(), 500);
 }
+

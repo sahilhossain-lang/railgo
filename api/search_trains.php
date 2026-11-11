@@ -35,3 +35,4 @@ try {
     error_log("Search trains error: " . $e->getMessage());
     sendJsonResponse(false, null, 'Failed to fetch train schedules: ' . $e->getMessage(), 500);
 }
+

@@ -27,3 +27,4 @@ try {
     error_log("Booking history error: " . $e->getMessage());
     sendJsonResponse(false, null, 'Failed to retrieve booking history: ' . $e->getMessage(), 500);
 }
+

@@ -15,3 +15,4 @@ $userModel = new User();
 $userModel->logout();
 
 sendJsonResponse(true, null, 'Logged out successfully.');
+

@@ -156,3 +156,4 @@ class User {
         return $stmt->fetch() ?: null;
     }
 }
+

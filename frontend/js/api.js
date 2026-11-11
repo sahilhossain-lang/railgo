@@ -4,10 +4,9 @@
  */
 
 const RailGoAPI = (() => {
-  // Configuration
-  let BASE_URL = typeof window !== 'undefined' && window.location &&
-    (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1'))
-    ? ''
+  // Configuration: Auto-detects /railway prefix when running inside XAMPP
+  let BASE_URL = typeof window !== 'undefined' && window.location && window.location.pathname.startsWith('/railway')
+    ? '/railway'
     : '';
   let USE_MOCK_FALLBACK = true;
 
@@ -675,6 +674,37 @@ const RailGoAPI = (() => {
     return await res.json();
   }
 
+  /**
+   * Fast Station Search Across All 8,990 Stations
+   */
+  async function getStations(query = '', limit = 25) {
+    try {
+      const res = await fetch(`${BASE_URL}/api/get_stations.php?q=${encodeURIComponent(query)}&limit=${limit}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
+          return json.data;
+        }
+      }
+    } catch (e) {}
+
+    // Fallback to loading stations_index.json
+    try {
+      const res = await fetch(`${BASE_URL}/frontend/assets/stations_index.json`);
+      if (res.ok) {
+        const all = await res.json();
+        const qLower = query.toLowerCase().trim();
+        if (!qLower) return all.slice(0, limit);
+        return all.filter(s =>
+          (s.name && s.name.toLowerCase().includes(qLower)) ||
+          (s.code && s.code.toLowerCase().includes(qLower))
+        ).slice(0, limit);
+      }
+    } catch (e) {}
+
+    return [];
+  }
+
   return {
     setBaseUrl: (url) => { BASE_URL = url; },
     setUseMock: (flag) => { USE_MOCK_FALLBACK = Boolean(flag); },
@@ -688,7 +718,8 @@ const RailGoAPI = (() => {
     login,
     register,
     logout,
-    checkAuth
+    checkAuth,
+    getStations
   };
 })();
 

@@ -34,3 +34,4 @@ try {
     error_log("Cancel ticket error: " . $e->getMessage());
     sendJsonResponse(false, null, $e->getMessage(), 400);
 }
+

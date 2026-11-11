@@ -20,3 +20,4 @@ sendJsonResponse(true, [
     'user'       => $currentUser,
     'csrf_token' => $csrfToken
 ], 'Session status retrieved.');
+

@@ -43,3 +43,4 @@ try {
     error_log("Booking error: " . $e->getMessage());
     sendJsonResponse(false, null, $e->getMessage(), 500);
 }
+

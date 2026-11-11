@@ -4,10 +4,10 @@
  * Compatible with PHP 8+ and XAMPP environment.
  */
 
-// 1. Error Reporting Configuration
-// Display errors in local dev, log in production
+// 1. Error Reporting & Resource Configuration
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
+ini_set('memory_limit', '512M');
 error_reporting(E_ALL);
 
 // 2. Database Connection Credentials
@@ -111,6 +111,12 @@ function getJsonPayload(): array {
     if (empty($raw)) {
         return $_POST;
     }
+    // Remove UTF-8 BOM if present
+    $raw = preg_replace('/^\xEF\xBB\xBF/', '', trim($raw));
     $decoded = json_decode($raw, true);
-    return is_array($decoded) ? $decoded : [];
+    if (is_array($decoded) && !empty($decoded)) {
+        return $decoded;
+    }
+    return !empty($_POST) ? $_POST : (is_array($decoded) ? $decoded : []);
 }
+

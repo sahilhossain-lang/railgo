@@ -59,18 +59,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropdown = document.getElementById(dropdownId);
     if (!inputElement || !dropdown) return;
 
-    function renderOptions(query) {
-      const q = (query || '').toLowerCase().trim();
-      const matches = q
-        ? STATIONS.filter(s => s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q))
-        : STATIONS;
+    let debounceTimer = null;
+
+    async function renderOptions(query) {
+      const q = (query || '').trim();
+      let matches = [];
+
+      try {
+        matches = await RailGoAPI.getStations(q, 30);
+      } catch (e) {}
+
+      if (!matches || matches.length === 0) {
+        const qLower = q.toLowerCase();
+        matches = q
+          ? STATIONS.filter(s => s.name.toLowerCase().includes(qLower) || s.code.toLowerCase().includes(qLower))
+          : STATIONS;
+      }
 
       if (matches.length === 0) {
         dropdown.innerHTML = `<div class="autocomplete-item" style="cursor: default; color: var(--color-slate-400);">No stations found</div>`;
       } else {
         dropdown.innerHTML = matches.map(s => `
           <div class="autocomplete-item" data-station="${RailGoAPI.escapeHTML(s.name)} (${RailGoAPI.escapeHTML(s.code)})">
-            <span class="station-title">${RailGoAPI.escapeHTML(s.name)}</span>
+            <span class="station-title">${RailGoAPI.escapeHTML(s.name)}${s.state ? `<span style="font-size: 0.78rem; opacity: 0.65; margin-left: 6px;">· ${RailGoAPI.escapeHTML(s.state)}</span>` : ''}</span>
             <span class="station-code">${RailGoAPI.escapeHTML(s.code)}</span>
           </div>
         `).join('');
@@ -83,7 +94,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     inputElement.addEventListener('input', (e) => {
-      renderOptions(e.target.value);
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        renderOptions(e.target.value);
+      }, 150);
     });
 
     inputElement.addEventListener('focus', () => {
