@@ -133,25 +133,25 @@ class Booking {
                     "INSERT INTO `bookings` (pnr, train_number, train_name, from_code, from_name, to_code, to_name,
                                              class_code, journey_date, departure_time, arrival_time, duration,
                                              total_fare, booking_status, coach, created_at)
-                     VALUES (:pnr, :tnum, :tname, :fcode, :fname, :tcode, :tname,
+                     VALUES (:pnr, :tnum, :tname, :fcode, :fname, :tcode, :toname,
                              :class, :jdate, :dep, :arr, :dur,
                              :fare, 'Confirmed', :coach, NOW())"
                 );
                 $bInsert->execute([
-                    ':pnr'   => $pnr,
-                    ':tnum'  => $trainNumber,
-                    ':tname' => $trainName,
-                    ':fcode' => $fromCode,
-                    ':fname' => $fromName,
-                    ':tcode' => $toCode,
-                    ':tname' => $toName,
-                    ':class' => $classCode,
-                    ':jdate' => $journeyDate,
-                    ':dep'   => $depTime,
-                    ':arr'   => $arrTime,
-                    ':dur'   => $duration,
-                    ':fare'  => $totalFare,
-                    ':coach' => $coach
+                    ':pnr'    => $pnr,
+                    ':tnum'   => $trainNumber,
+                    ':tname'  => $trainName,
+                    ':fcode'  => $fromCode,
+                    ':fname'  => $fromName,
+                    ':tcode'  => $toCode,
+                    ':toname' => $toName,
+                    ':class'  => $classCode,
+                    ':jdate'  => $journeyDate,
+                    ':dep'    => $depTime,
+                    ':arr'    => $arrTime,
+                    ':dur'    => $duration,
+                    ':fare'   => $totalFare,
+                    ':coach'  => $coach
                 ]);
 
                 $bookingId = (int)$this->db->lastInsertId();

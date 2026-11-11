@@ -36,6 +36,63 @@
     </div>
   </header>
 
+  <!-- Login Prompt Banner -->
+  <section id="login-prompt" class="container login-prompt" aria-label="Login Option">
+    <p class="login-question">Would you like to log in?</p>
+    <button id="login-yes" class="btn btn-primary">Yes</button>
+    <button id="login-no" class="btn btn-secondary">No, continue as guest</button>
+  </section>
+
+  <!-- Hidden Login Form -->
+  <section id="login-form-section" class="container" style="display:none;" aria-label="Login Form">
+    <form id="login-form" novalidate>
+      <div class="form-group">
+        <label for="login-email" class="form-label">Email</label>
+        <input type="email" id="login-email" class="form-input" required placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label for="login-password" class="form-label">Password</label>
+        <input type="password" id="login-password" class="form-input" required placeholder="Password">
+      </div>
+      <div class="login-actions">
+        <button type="submit" class="btn btn-primary">Log In</button>
+        <button type="button" id="login-cancel" class="btn btn-secondary">Cancel</button>
+      </div>
+      <p id="login-message" class="status-message"></p>
+      <p class="login-register-link">Don't have an account? <a href="#" id="show-register">Register</a></p>
+    </form>
+  </section>
+
+  <!-- Hidden Register Form -->
+  <section id="register-form-section" class="container" style="display:none;" aria-label="Register Form">
+    <form id="register-form" novalidate>
+      <div class="form-group">
+        <label for="register-name" class="form-label">Full Name</label>
+        <input type="text" id="register-name" class="form-input" required placeholder="Your full name">
+      </div>
+      <div class="form-group">
+        <label for="register-email" class="form-label">Email</label>
+        <input type="email" id="register-email" class="form-input" required placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label for="register-password" class="form-label">Password</label>
+        <input type="password" id="register-password" class="form-input" required placeholder="Min 6 characters">
+      </div>
+      <div class="login-actions">
+        <button type="submit" class="btn btn-primary">Register</button>
+        <button type="button" id="register-cancel" class="btn btn-secondary">Cancel</button>
+      </div>
+      <p id="register-message" class="status-message"></p>
+      <p class="login-register-link">Already have an account? <a href="#" id="show-login-from-register">Log In</a></p>
+    </form>
+  </section>
+
+  <!-- Logged-in User Banner (hidden by default) -->
+  <section id="logged-in-banner" class="container logged-in-banner" style="display:none;" aria-label="User Status">
+    <p>Welcome, <span id="logged-in-name"></span>!</p>
+    <button id="logout-btn" class="btn btn-secondary">Logout</button>
+  </section>
+
   <main id="main-content">
     <!-- PNR Hero & Lookup Section (Figma 4:12139) -->
     <section class="pnr-page-hero" aria-labelledby="pnr-page-title">
@@ -315,6 +372,7 @@
   <!-- Scripts -->
   <script src="js/api.js?v=3"></script>
   <script src="js/ticket.js?v=3"></script>
+  <script src="js/login.js?v=1"></script>
 </body>
 </html>
 

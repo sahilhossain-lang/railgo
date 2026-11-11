@@ -2245,3 +2245,97 @@
   }
 }
 
+
+
+/* --------------------------------------------------------------------------
+   LOGIN / REGISTER UI
+   -------------------------------------------------------------------------- */
+.login-prompt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-navy-800, #1a2332);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  justify-content: center;
+}
+
+.login-question {
+  color: var(--color-white, #fff);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.login-prompt .btn {
+  padding: 6px 18px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+}
+
+#login-form-section,
+#register-form-section {
+  max-width: 400px;
+  margin: var(--space-4) auto;
+  padding: var(--space-4);
+  background: var(--color-surface, #fff);
+  border-radius: var(--radius-xl, 16px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+#login-form .form-group,
+#register-form .form-group {
+  margin-bottom: var(--space-2);
+}
+
+.login-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.login-actions .btn {
+  flex: 1;
+}
+
+.status-message {
+  margin-top: var(--space-1);
+  font-size: 0.85rem;
+  min-height: 1.2em;
+}
+
+.login-register-link {
+  text-align: center;
+  margin-top: var(--space-2);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary, #666);
+}
+
+.login-register-link a {
+  color: var(--color-teal-500, #009688);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.logged-in-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-navy-800, #1a2332);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  justify-content: center;
+}
+
+.logged-in-banner p {
+  color: var(--color-white, #fff);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.logged-in-banner .btn {
+  padding: 6px 18px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+}

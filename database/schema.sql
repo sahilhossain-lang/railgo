@@ -17,6 +17,7 @@ START TRANSACTION;
 
 DROP TABLE IF EXISTS `passengers`;
 DROP TABLE IF EXISTS `bookings`;
+DROP TABLE IF EXISTS `users`;
 DROP TABLE IF EXISTS `schedules`;
 DROP TABLE IF EXISTS `trains`;
 DROP TABLE IF EXISTS `stations`;
@@ -131,7 +132,17 @@ CREATE TABLE `passengers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- INSERTS: STATIONS (699 records)
+-- 6. USERS TABLE
+-- ----------------------------------------------------------------------------
+CREATE TABLE `users` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(150) NOT NULL,
+  `email` VARCHAR(255) NOT NULL,
+  `password_hash` VARCHAR(255) NOT NULL,
+  `role` ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY `idx_users_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 -- ----------------------------------------------------------------------------
 INSERT INTO `stations` (`code`, `name`, `state`, `zone`, `address`, `latitude`, `longitude`) VALUES
 ('JNM', 'Jayanagar Majilpur Halt', 'West Bengal', 'ER', 'Jaynagar, West Bengal', 22.168635, 88.415324),
