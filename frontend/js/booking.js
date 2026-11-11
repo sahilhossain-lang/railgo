@@ -27,6 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentBaseFare = 1895;
   const MAX_PASSENGERS = 6;
 
+  // Sync "My tickets" navbar link with last booked PNR
+  const savedPnr = localStorage.getItem('railgo_last_pnr');
+  if (savedPnr) {
+    document.querySelectorAll('a[href*="pnr.html#ticket"]').forEach(link => {
+      link.href = `pnr.html?pnr=${encodeURIComponent(savedPnr)}#ticket`;
+    });
+  }
+
   // Listen for booking initiation event
   window.addEventListener('railgo:init-booking', (e) => {
     currentTrainData = e.detail;
@@ -266,6 +274,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await RailGoAPI.bookTicket(payload);
 
         if (result.status === 'success') {
+          // Save last PNR for instant "My tickets" lookup
+          localStorage.setItem('railgo_last_pnr', result.pnr);
+          document.querySelectorAll('a[href*="pnr.html#ticket"]').forEach(link => {
+            link.href = `pnr.html?pnr=${result.pnr}#ticket`;
+          });
+
           // Show Success View
           formView.style.display = 'none';
           successView.classList.add('show');

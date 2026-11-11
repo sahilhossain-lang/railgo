@@ -77,6 +77,35 @@
       </div>
     </section>
 
+    <!-- My Booked Tickets Bar (shown when user has active bookings) -->
+    <section id="my-bookings-section" class="container my-bookings-section" style="display: none;" aria-label="My Bookings">
+      <div class="my-bookings-card">
+        <div class="my-bookings-header">
+          <div>
+            <h2 class="my-bookings-heading">My Booked Tickets</h2>
+            <p class="my-bookings-sub">Select any ticket to view live status and digital boarding pass.</p>
+          </div>
+          <span id="my-bookings-badge" class="my-bookings-count-pill">0 tickets</span>
+        </div>
+        <div id="my-bookings-chips" class="my-bookings-chips-list">
+          <!-- Dynamically populated chips -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Empty State (shown when visiting #ticket with no bookings) -->
+    <section id="empty-tickets-section" class="container empty-tickets-section" style="display: none;" aria-label="No Bookings">
+      <div class="empty-tickets-card">
+        <div class="empty-tickets-icon">🎫</div>
+        <h2 class="empty-tickets-title">No tickets booked yet</h2>
+        <p class="empty-tickets-text">You haven't booked any trains yet. Find your next train and your digital ticket will appear here automatically.</p>
+        <a href="index.html" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+          <span>Book a train</span>
+          <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+
     <!-- PNR Status & Timeline Section -->
     <section id="pnr-result-section" class="container pnr-result-section" style="display: none;" aria-label="PNR Status and Journey Timeline">
       <div class="pnr-result-grid">

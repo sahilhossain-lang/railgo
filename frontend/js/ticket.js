@@ -32,6 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const pnrHelper = document.getElementById('pnr-helper-message');
   const pnrResultSection = document.getElementById('pnr-result-section');
   const ticketSection = document.getElementById('ticket') || document.getElementById('ticket-view-section');
+  const myBookingsSection = document.getElementById('my-bookings-section');
+  const myBookingsChips = document.getElementById('my-bookings-chips');
+  const myBookingsBadge = document.getElementById('my-bookings-badge');
+  const emptyTicketsSection = document.getElementById('empty-tickets-section');
 
   // Timeline elements
   const timelineTrainTitle = document.getElementById('tl-train-title');
@@ -115,6 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
         pnrHelper.textContent = 'Find your PNR on your ticket or booking message.';
         pnrResultSection.style.display = 'block';
         ticketSection.style.display = 'block';
+        if (emptyTicketsSection) emptyTicketsSection.style.display = 'none';
+
+        localStorage.setItem('railgo_last_pnr', pnr);
+        if (myBookingsChips) {
+          myBookingsChips.querySelectorAll('.my-booking-chip').forEach(c => {
+            c.classList.toggle('active', c.getAttribute('data-pnr') === pnr);
+          });
+        }
 
         if (shouldScroll) {
           if (window.location.hash === '#ticket' && ticketSection) {
@@ -231,19 +243,118 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 6. Handle URL query param: ?pnr=XXXXXXXXXX
+  // 6. My Bookings Loader & Switcher
+  async function loadMyBookings(activePnr) {
+    if (!myBookingsSection || !myBookingsChips) return [];
+
+    let bookings = [];
+
+    // 1. Fetch from server API (MySQL)
+    try {
+      const res = await RailGoAPI.getBookingHistory(20);
+      if (res && res.status === 'success' && Array.isArray(res.data)) {
+        bookings = res.data;
+      }
+    } catch (e) {}
+
+    // 2. Merge with localStorage store so recent bookings always show up
+    try {
+      const localStore = (RailGoAPI.getBookingsStore) ? RailGoAPI.getBookingsStore() : {};
+      const serverPnrs = new Set(bookings.map(b => b.pnr));
+      Object.keys(localStore).forEach(pnr => {
+        if (!serverPnrs.has(pnr)) {
+          bookings.push(localStore[pnr]);
+        }
+      });
+    } catch (e) {}
+
+    if (bookings.length === 0) {
+      myBookingsSection.style.display = 'none';
+      return [];
+    }
+
+    // Render bookings chips
+    myBookingsSection.style.display = 'block';
+    if (myBookingsBadge) {
+      myBookingsBadge.textContent = `${bookings.length} ticket${bookings.length === 1 ? '' : 's'}`;
+    }
+
+    myBookingsChips.innerHTML = bookings.map(b => {
+      const isActive = (b.pnr === activePnr);
+      return `
+        <button type="button" class="my-booking-chip ${isActive ? 'active' : ''}" data-pnr="${RailGoAPI.escapeHTML(b.pnr)}">
+          <div class="chip-top">
+            <span class="chip-train">${RailGoAPI.escapeHTML(b.train_number)} · ${RailGoAPI.escapeHTML(b.train_name)}</span>
+            <span class="chip-status">${RailGoAPI.escapeHTML(b.status_label || '✓ Confirmed')}</span>
+          </div>
+          <div class="chip-route">${RailGoAPI.escapeHTML(b.from_name)} → ${RailGoAPI.escapeHTML(b.to_name)}</div>
+          <div class="chip-meta">
+            <span class="chip-date">${RailGoAPI.escapeHTML(b.departure_date)}</span>
+            <span class="chip-pnr">PNR: ${RailGoAPI.escapeHTML(b.pnr)}</span>
+          </div>
+        </button>
+      `;
+    }).join('');
+
+    // Attach click listeners to chips
+    myBookingsChips.querySelectorAll('.my-booking-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const pnr = chip.getAttribute('data-pnr');
+        if (pnr) {
+          pnrInput.value = pnr;
+          myBookingsChips.querySelectorAll('.my-booking-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          executePNRLookup(pnr, true);
+        }
+      });
+    });
+
+    return bookings;
+  }
+
+  // 7. Handle URL query param: ?pnr=XXXXXXXXXX & "My tickets" Navigation
   const urlParams = new URLSearchParams(window.location.search);
   const paramPNR = urlParams.get('pnr');
   const hasTicketHash = window.location.hash === '#ticket';
+  const savedLastPnr = localStorage.getItem('railgo_last_pnr');
 
-  if (paramPNR && /^\d{10}$/.test(paramPNR)) {
-    pnrInput.value = paramPNR;
-    executePNRLookup(paramPNR, hasTicketHash);
-  } else {
-    // Zero demo data: leave input clean and hide ticket views until user queries a real PNR
-    pnrInput.value = '';
-    if (pnrResultSection) pnrResultSection.style.display = 'none';
-    if (ticketSection) ticketSection.style.display = 'none';
-  }
+  (async function initTicketPage() {
+    const bookings = await loadMyBookings(paramPNR || savedLastPnr);
+
+    if (paramPNR && /^\d{10}$/.test(paramPNR)) {
+      pnrInput.value = paramPNR;
+      executePNRLookup(paramPNR, hasTicketHash);
+    } else if (bookings.length > 0) {
+      // Automatically load and show the user's latest booking
+      const targetPnr = (savedLastPnr && bookings.some(b => b.pnr === savedLastPnr))
+        ? savedLastPnr
+        : bookings[0].pnr;
+      pnrInput.value = targetPnr;
+      executePNRLookup(targetPnr, hasTicketHash);
+    } else {
+      // No bookings found
+      pnrInput.value = '';
+      if (pnrResultSection) pnrResultSection.style.display = 'none';
+      if (ticketSection) ticketSection.style.display = 'none';
+      if (hasTicketHash && emptyTicketsSection) {
+        emptyTicketsSection.style.display = 'block';
+      }
+    }
+  })();
+
+  // 8. Handle hashchange (e.g. user clicks "My tickets" while already on pnr.html)
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash === '#ticket') {
+      if (ticketSection && ticketSection.style.display !== 'none') {
+        ticketSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        const savedLastPnr = localStorage.getItem('railgo_last_pnr');
+        if (savedLastPnr) {
+          pnrInput.value = savedLastPnr;
+          executePNRLookup(savedLastPnr, true);
+        }
+      }
+    }
+  });
 });
 
