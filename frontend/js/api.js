@@ -426,6 +426,54 @@ const RailGoAPI = (() => {
     };
   }
 
+  function calculateArrivalDate(journeyDateStr, depTimeStr, arrTimeStr, durationStr) {
+    try {
+      let baseDate = new Date(journeyDateStr);
+      if (isNaN(baseDate.getTime())) {
+        baseDate = new Date();
+      }
+      const depMatch = (depTimeStr || '').match(/(\d{1,2}):(\d{2})/);
+      if (depMatch) {
+        baseDate.setHours(parseInt(depMatch[1], 10), parseInt(depMatch[2], 10), 0, 0);
+      }
+      let durHours = 0;
+      let durMinutes = 0;
+      const durHMatch = (durationStr || '').match(/(\d+)\s*h/i);
+      const durMMatch = (durationStr || '').match(/(\d+)\s*m/i);
+      if (durHMatch) durHours = parseInt(durHMatch[1], 10);
+      if (durMMatch) durMinutes = parseInt(durMMatch[1], 10);
+
+      if (durHours > 0 || durMinutes > 0) {
+        const arrTimestamp = baseDate.getTime() + (durHours * 3600000) + (durMinutes * 60000);
+        return new Date(arrTimestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+
+      const arrMatch = (arrTimeStr || '').match(/(\d{1,2}):(\d{2})/);
+      if (depMatch && arrMatch) {
+        const depMins = parseInt(depMatch[1], 10) * 60 + parseInt(depMatch[2], 10);
+        const arrMins = parseInt(arrMatch[1], 10) * 60 + parseInt(arrMatch[2], 10);
+        if (arrMins < depMins) {
+          baseDate.setDate(baseDate.getDate() + 1);
+        }
+      }
+      return baseDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch {
+      return journeyDateStr;
+    }
+  }
+
+  function formatDateDisplay(dateStr) {
+    try {
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+      return dateStr;
+    } catch {
+      return dateStr;
+    }
+  }
+
   /**
    * Book Ticket API
    * POST /api/book_ticket.php
@@ -485,9 +533,9 @@ const RailGoAPI = (() => {
       to_code: bookingData.to_code || 'NJP',
       to_name: bookingData.to_name || 'New Jalpaiguri',
       departure_time: bookingData.departure_time || '06:40',
-      departure_date: bookingData.journey_date || '20 Nov 2026',
+      departure_date: formatDateDisplay(bookingData.journey_date || '2026-11-20'),
       arrival_time: bookingData.arrival_time || '10:00',
-      arrival_date: bookingData.journey_date || '20 Nov 2026',
+      arrival_date: calculateArrivalDate(bookingData.journey_date || '2026-11-20', bookingData.departure_time || '06:40', bookingData.arrival_time || '10:00', bookingData.duration || '3h 20m'),
       duration: bookingData.duration || '3h 20m',
       coach: coachPrefix,
       status: 'Confirmed',
@@ -685,7 +733,9 @@ const RailGoAPI = (() => {
     register,
     logout,
     checkAuth,
-    getStations
+    getStations,
+    calculateArrivalDate,
+    formatDateDisplay
   };
 })();
 

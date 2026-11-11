@@ -148,13 +148,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderPNRStatus(data) {
+    const realArrDate = (data.arrival_date && data.arrival_date !== data.departure_date)
+      ? data.arrival_date
+      : (RailGoAPI.calculateArrivalDate
+          ? RailGoAPI.calculateArrivalDate(data.departure_date, data.departure_time, data.arrival_time, data.duration)
+          : data.arrival_date);
+
     timelineTrainTitle.textContent = data.train_name;
     timelineTrainMeta.textContent = `${data.train_number} · ${data.class_name}`;
     tlStepBookedTime.textContent = data.booking_date || '10 Nov 2026 · 12:42';
     tlStepDepStation.textContent = `Departs · ${data.from_name}`;
     tlStepDepTime.textContent = `${data.departure_date} · ${data.departure_time}`;
     tlStepArrStation.textContent = `Arrives · ${data.to_name}`;
-    tlStepArrTime.textContent = `${data.arrival_date} · ${data.arrival_time}`;
+    tlStepArrTime.textContent = `${realArrDate} · ${data.arrival_time}`;
 
     // Render passengers
     pnrPassengerList.innerHTML = (data.passengers || []).map(p => `
@@ -169,6 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderTicket(data) {
+    const realArrDate = (data.arrival_date && data.arrival_date !== data.departure_date)
+      ? data.arrival_date
+      : (RailGoAPI.calculateArrivalDate
+          ? RailGoAPI.calculateArrivalDate(data.departure_date, data.departure_time, data.arrival_time, data.duration)
+          : data.arrival_date);
+
     ticketTrainName.textContent = data.train_name;
     ticketTrainNumber.textContent = data.train_number;
     ticketClass.textContent = data.class_name;
@@ -179,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ticketToStation.textContent = data.to_name;
     ticketDepDate.textContent = data.departure_date;
     ticketCoach.textContent = data.coach || 'B4';
-    ticketArrDate.textContent = data.arrival_date;
+    ticketArrDate.textContent = realArrDate;
     ticketPnrDisplay.textContent = data.pnr;
     ticketBackPnr.textContent = data.pnr;
 

@@ -1392,14 +1392,16 @@
 .form-input.p-age {
   text-align: center;
   font-variant-numeric: tabular-nums;
-  -moz-appearance: textfield;
-  appearance: textfield;
+  -moz-appearance: textfield !important;
+  -webkit-appearance: none !important;
+  appearance: textfield !important;
 }
 
 .form-input.p-age::-webkit-inner-spin-button,
 .form-input.p-age::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+  display: none !important;
 }
 
 /* Gender Segmented Control */

@@ -79,7 +79,6 @@ class Booking {
         $depTime = trim((string)($payload['departure_time'] ?? ''));
         $arrTime = trim((string)($payload['arrival_time'] ?? ''));
         $duration = trim((string)($payload['duration'] ?? ''));
-        $durH = 3;
 
         // If database is available, lookup train catalog if any attributes are missing
         if ($this->db !== null) {
@@ -114,6 +113,8 @@ class Booking {
         if (empty($depTime)) $depTime = '06:40';
         if (empty($arrTime)) $arrTime = '10:00';
         if (empty($duration)) $duration = '3h 20m';
+
+        $arrivalDate = $this->calculateArrivalDate($journeyDate, $depTime, $arrTime, $duration);
 
         $baseFare = (float)($payload['base_fare'] ?? 450.00);
         $totalFare = $baseFare * $passengerCount;
@@ -225,7 +226,9 @@ class Booking {
                 'to_name'        => $toName,
                 'class_code'     => $classCode,
                 'journey_date'   => $journeyDate,
+                'departure_date' => date('d M Y', strtotime($journeyDate)),
                 'departure_time' => $depTime,
+                'arrival_date'   => $arrivalDate,
                 'arrival_time'   => $arrTime,
                 'duration'       => $duration,
                 'total_fare'     => $totalFare,
@@ -251,7 +254,7 @@ class Booking {
             'departure_time' => $depTime,
             'departure_date' => date('d M Y', strtotime($journeyDate)),
             'arrival_time'   => $arrTime,
-            'arrival_date'   => date('d M Y', strtotime($journeyDate . ($durH > 12 ? ' +1 day' : ''))),
+            'arrival_date'   => $arrivalDate,
             'duration'       => $duration,
             'coach'          => $coach,
             'status'         => 'Confirmed',
@@ -315,7 +318,7 @@ class Booking {
                         'departure_time' => $booking['departure_time'],
                         'departure_date' => date('d M Y', strtotime($jDate)),
                         'arrival_time'   => $booking['arrival_time'],
-                        'arrival_date'   => date('d M Y', strtotime($jDate)),
+                        'arrival_date'   => $this->calculateArrivalDate($jDate, (string)$booking['departure_time'], (string)$booking['arrival_time'], (string)$booking['duration']),
                         'duration'       => $booking['duration'],
                         'coach'          => $booking['coach'],
                         'status'         => $booking['booking_status'],
@@ -344,9 +347,9 @@ class Booking {
                 'to_code'        => $offline['to_code'],
                 'to_name'        => $offline['to_name'],
                 'departure_time' => $offline['departure_time'],
-                'departure_date' => date('d M Y', strtotime($jDate)),
+                'departure_date' => $offline['departure_date'] ?? date('d M Y', strtotime($jDate)),
                 'arrival_time'   => $offline['arrival_time'],
-                'arrival_date'   => date('d M Y', strtotime($jDate)),
+                'arrival_date'   => $offline['arrival_date'] ?? $this->calculateArrivalDate($jDate, (string)$offline['departure_time'], (string)$offline['arrival_time'], (string)$offline['duration']),
                 'duration'       => $offline['duration'],
                 'coach'          => $offline['coach'],
                 'status'         => $offline['status'] ?? 'Confirmed',
@@ -485,5 +488,39 @@ class Booking {
             }
         }
         return null;
+    }
+
+    /**
+     * Compute realistic arrival date given departure date, dep/arr times, and duration string.
+     */
+    public function calculateArrivalDate(string $journeyDate, string $depTime, string $arrTime, string $duration): string {
+        $durH = 0;
+        $durM = 0;
+        if (preg_match('/(\d+)\s*h(?:our)?s?/i', $duration, $mh)) {
+            $durH = (int)$mh[1];
+        }
+        if (preg_match('/(\d+)\s*m(?:in)?s?/i', $duration, $mm)) {
+            $durM = (int)$mm[1];
+        }
+
+        try {
+            $cleanDep = substr(trim($depTime), 0, 5);
+            $cleanArr = substr(trim($arrTime), 0, 5);
+            $dt = new DateTime("{$journeyDate} {$cleanDep}");
+
+            if ($durH > 0 || $durM > 0) {
+                $dt->modify("+{$durH} hours +{$durM} minutes");
+                return $dt->format('d M Y');
+            }
+
+            if ($cleanArr !== '' && $cleanDep !== '') {
+                if (strtotime("2000-01-01 {$cleanArr}") < strtotime("2000-01-01 {$cleanDep}")) {
+                    $dt->modify('+1 day');
+                }
+            }
+            return $dt->format('d M Y');
+        } catch (Throwable $e) {
+            return date('d M Y', strtotime($journeyDate));
+        }
     }
 }
