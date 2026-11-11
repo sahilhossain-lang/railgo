@@ -1,0 +1,151 @@
+/* ==========================================================================
+   RailGo Design Tokens
+   Extracted from Figma (11smpALnVQ0DR3QaxRwXkj)
+   ========================================================================== */
+
+:root {
+  /* Brand & Core Color Palette */
+  --color-navy-950: #080e21;
+  --color-navy-900: #0f1b3d;
+  --color-navy-800: #1c2b50;
+  --color-navy-700: #223154;
+  --color-navy-600: #2d3f6a;
+
+  /* Accent & Success / Availability */
+  --color-teal-600: #087970;
+  --color-teal-700: #065e57;
+  --color-teal-500: #0ea297;
+  --color-teal-100: #cdeee9;
+  --color-teal-50: #e4f4f0;
+
+  /* Warning / RAC / Medium Availability */
+  --color-amber-600: #d99110;
+  --color-amber-500: #ffb020;
+  --color-amber-400: #ffc24d;
+  --color-amber-900: #835200;
+  --color-amber-50: #fff3da;
+
+  /* Danger / Waitlist / Sold Out / Validation Error */
+  --color-crimson-600: #b4232c;
+  --color-crimson-500: #e5484d;
+  --color-crimson-100: #fbd6da;
+  --color-crimson-50: #fdecef;
+
+  /* Neutrals & Surfaces */
+  --color-white: #ffffff;
+  --color-slate-900: #0f1b3d;
+  --color-slate-700: #334155;
+  --color-slate-600: #54627a;
+  --color-slate-400: #8a9bb5;
+  --color-slate-300: #ccd5e9;
+  --color-slate-200: #d7dfea;
+  --color-slate-150: #e1e7f2;
+  --color-slate-100: #e8ecf2;
+  --color-slate-50: #eef2f7;
+
+  /* Semantic UI Tokens */
+  --bg-page: var(--color-slate-50);
+  --bg-hero: var(--color-navy-900);
+  --bg-surface: var(--color-white);
+  --bg-surface-elevated: var(--color-white);
+  --bg-surface-muted: var(--color-slate-100);
+  --bg-surface-subtle: #edf2f7;
+
+  --text-primary: var(--color-navy-900);
+  --text-secondary: var(--color-slate-600);
+  --text-muted: var(--color-slate-400);
+  --text-inverse: var(--color-white);
+  --text-inverse-muted: var(--color-slate-300);
+
+  --border-subtle: var(--color-slate-200);
+  --border-focus: var(--color-teal-600);
+  --border-error: var(--color-crimson-500);
+
+  /* Typography Families */
+  --font-display: 'Bricolage Grotesque', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, Menlo, monospace;
+
+  /* Typography Scales */
+  --font-size-hero: 2.25rem;    /* 36px */
+  --font-size-h1: 1.75rem;      /* 28px */
+  --font-size-h2: 1.5rem;       /* 24px */
+  --font-size-h3: 1.25rem;      /* 20px */
+  --font-size-lg: 1rem;         /* 16px */
+  --font-size-md: 0.9375rem;    /* 15px */
+  --font-size-base: 0.875rem;   /* 14px */
+  --font-size-sm: 0.8125rem;    /* 13px */
+  --font-size-xs: 0.75rem;      /* 12px */
+  --font-size-micro: 0.6875rem; /* 11px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* Border Radii */
+  --radius-xs: 5.5px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-pill: 999px;
+
+  /* Elevation Shadows */
+  --shadow-sm: 0px 3px 8px 0px rgba(15, 27, 61, 0.05);
+  --shadow-md: 0px 8px 24px 0px rgba(15, 27, 61, 0.06);
+  --shadow-lg: 0px 16px 40px 0px rgba(15, 27, 61, 0.08);
+  --shadow-xl: 0px 20px 48px 0px rgba(15, 27, 61, 0.12);
+  --shadow-modal: 0px 24px 64px 0px rgba(15, 27, 61, 0.22);
+  --shadow-focus: 0 0 0 3px rgba(8, 121, 112, 0.28);
+  --shadow-border: 0px 0px 0px 1px rgba(0, 0, 0, 0.08);
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* Layout Max Widths */
+  --max-width-desktop: 1440px;
+  --max-width-container: 1296px;
+  --max-width-ticket: 960px;
+  --max-width-modal: 856px;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-normal: 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-3d: 650ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-Index */
+  --z-base: 1;
+  --z-dropdown: 20;
+  --z-sticky: 50;
+  --z-modal-backdrop: 100;
+  --z-modal: 101;
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms !important;
+    --transition-normal: 0ms !important;
+    --transition-slow: 0ms !important;
+    --transition-3d: 0ms !important;
+  }
+}
+
+.reduced-motion {
+  --transition-fast: 0ms !important;
+  --transition-normal: 0ms !important;
+  --transition-slow: 0ms !important;
+  --transition-3d: 0ms !important;
+}

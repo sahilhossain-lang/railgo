@@ -1,0 +1,14 @@
+# Node & Dependencies
+node_modules/
+package-lock.json
+
+# Temporary / Scratch files
+inspect_*.js
+*.log
+.env
+
+# OS / Editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

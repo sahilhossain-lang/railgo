@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RailGo — Go places. Take the train.</title>
+  <meta name="description" content="Book Indian railway train tickets with real-time seat availability, live fares, and PNR status.">
+
+  <!-- Google Fonts: Bricolage Grotesque, DM Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Site Navigation -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo" aria-label="RailGo Home">
+        <span class="brand-arrow" aria-hidden="true">↗</span>
+        <span>RailGo</span>
+      </a>
+
+      <nav aria-label="Primary Navigation">
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link active" aria-current="page">Book trains</a></li>
+          <li><a href="pnr.html" class="nav-link">PNR status</a></li>
+          <li><a href="pnr.html#ticket" class="nav-link">My tickets</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <span class="currency-badge" title="Region & Currency">IN / ₹</span>
+        <button id="motion-toggle-btn" class="btn-motion-toggle" aria-pressed="false" title="Toggle animation effects">
+          <span aria-hidden="true">⚡</span>
+          <span>Reduce motion</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <!-- Screen 1: Night-train Hero Section -->
+    <section class="hero-section" aria-labelledby="hero-title">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <span class="hero-kicker">A BETTER WAY TO GET THERE</span>
+          <h1 id="hero-title" class="hero-title">Go places.<br>Take the train.</h1>
+          <p class="hero-description">
+            From familiar platforms to somewhere new. Your next Indian rail journey starts here.
+          </p>
+
+          <div class="departure-board-badge" role="status">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>NEXT STOP · SOMEWHERE NEW</span>
+          </div>
+        </div>
+
+        <div class="hero-scene-wrapper" aria-hidden="true">
+          <div class="hero-scene-card">
+            <img src="assets/train-hero.svg" alt="Perspective night train illustration" class="hero-scene-artwork">
+            <div class="scene-floating-tag">
+              <span>●</span>
+              <span>12952 RAJDHANI · ON TIME</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Floating Search Panel -->
+    <section class="container search-panel-wrapper" aria-label="Train Search Panel">
+      <div class="search-panel">
+        <div class="search-panel-header">
+          <h2 class="search-panel-title">Where are we heading?</h2>
+          <!-- Quick Destination Selection Chips -->
+          <div class="quick-destinations-bar" role="toolbar" aria-label="Popular destinations">
+            <span class="quick-dest-label">Quick select:</span>
+            <button type="button" class="quick-dest-chip" data-station="Mumbai Central (MMCT)">Mumbai</button>
+            <button type="button" class="quick-dest-chip" data-station="Madgaon (Goa) (MAO)">Goa</button>
+            <button type="button" class="quick-dest-chip" data-station="Bengaluru City (SBC)">Bengaluru</button>
+            <button type="button" class="quick-dest-chip" data-station="Chennai Central (MAS)">Chennai</button>
+            <button type="button" class="quick-dest-chip" data-station="Howrah (Kolkata) (HWH)">Kolkata</button>
+            <button type="button" class="quick-dest-chip" data-station="Varanasi Jn (BSB)">Varanasi</button>
+            <button type="button" class="quick-dest-chip" data-station="Jaipur Jn (JP)">Jaipur</button>
+            <button type="button" class="quick-dest-chip" data-station="Ahmedabad Jn (ADI)">Ahmedabad</button>
+          </div>
+        </div>
+
+        <form id="train-search-form" class="search-form-grid" novalidate>
+          <!-- From Station -->
+          <div class="form-group">
+            <label for="from-station" class="form-label">From</label>
+            <div class="input-container">
+              <input type="text" id="from-station" class="form-input" value="New Delhi (NDLS)" autocomplete="off" required placeholder="Origin station">
+              <button type="button" id="btn-clear-from" class="btn-clear-input visible" title="Clear origin station" aria-label="Clear origin station">✕</button>
+              <div id="from-dropdown" class="autocomplete-dropdown" role="listbox"></div>
+            </div>
+          </div>
+
+          <!-- Swap Stations Button -->
+          <button type="button" id="swap-stations-btn" class="btn-swap-stations" title="Swap origin and destination" aria-label="Swap origin and destination">
+            ⇄
+          </button>
+
+          <!-- To Station -->
+          <div class="form-group">
+            <label for="to-station" class="form-label">To</label>
+            <div class="input-container">
+              <input type="text" id="to-station" class="form-input" value="Mumbai Central (MMCT)" autocomplete="off" required placeholder="Destination station">
+              <button type="button" id="btn-clear-to" class="btn-clear-input visible" title="Clear destination station" aria-label="Clear destination station">✕</button>
+              <div id="to-dropdown" class="autocomplete-dropdown" role="listbox"></div>
+            </div>
+          </div>
+
+          <!-- Departure Date -->
+          <div class="form-group">
+            <label for="departure-date" class="form-label">Departure date</label>
+            <div class="input-container">
+              <input type="date" id="departure-date" class="form-input" value="2026-11-20" required>
+            </div>
+          </div>
+
+          <!-- Class Selection -->
+          <div class="form-group">
+            <label for="travel-class" class="form-label">Class</label>
+            <div class="input-container">
+              <select id="travel-class" class="form-input">
+                <option value="all">All classes</option>
+                <option value="1A">1A · AC 1st Class</option>
+                <option value="2A">2A · AC 2 Tier</option>
+                <option value="3A" selected>3A · AC 3 Tier</option>
+                <option value="SL">SL · Sleeper</option>
+                <option value="CC">CC · Chair Car</option>
+                <option value="2S">2S · Second Sitting</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="form-group">
+            <button type="submit" id="search-submit-btn" class="btn-search-submit">
+              <span>Find trains</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Screen 2: Search Results Section with Live Filters -->
+    <section id="search-results-section" class="container search-results-section" aria-label="Search Results">
+      <!-- Journey Summary Bar -->
+      <div class="journey-summary-bar">
+        <div>
+          <h2 id="journey-route" class="journey-route-text">New Delhi → Mumbai</h2>
+          <p id="journey-details" class="journey-details-text">Fri, 20 Nov 2026 · All classes · 1 passenger</p>
+        </div>
+        <button type="button" id="btn-modify-search" class="btn-modify-search">Modify search</button>
+      </div>
+
+      <!-- Results Layout (Filters + Trains List) -->
+      <div class="results-layout">
+        <!-- Filter Sidebar -->
+        <aside class="filter-sidebar" aria-label="Filter train results">
+          <div class="filter-header">
+            <h3 class="filter-heading">Filters</h3>
+            <button type="button" id="btn-clear-filters" class="btn-clear-filters">Clear all</button>
+          </div>
+
+          <!-- Departure Time -->
+          <div class="filter-group">
+            <h4 class="filter-group-title">Departure time</h4>
+            <div class="time-slots-grid">
+              <button type="button" class="time-slot-btn" data-slot="night" title="00:00 - 06:00">Night</button>
+              <button type="button" class="time-slot-btn" data-slot="morning" title="06:00 - 12:00">Morning</button>
+              <button type="button" class="time-slot-btn" data-slot="afternoon" title="12:00 - 18:00">Afternoon</button>
+              <button type="button" class="time-slot-btn" data-slot="evening" title="18:00 - 24:00">Evening</button>
+            </div>
+          </div>
+
+          <!-- Travel Class -->
+          <div class="filter-group">
+            <h4 class="filter-group-title">Travel class</h4>
+            <div class="checkbox-list">
+              <label class="checkbox-label">
+                <input type="checkbox" name="filter-class" value="1A">
+                <span>1A · AC 1st Class</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="filter-class" value="2A">
+                <span>2A · AC 2 Tier</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="filter-class" value="3A">
+                <span>3A · AC 3 Tier</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="filter-class" value="SL">
+                <span>SL · Sleeper</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="filter-class" value="CC">
+                <span>CC · Chair Car</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="filter-class" value="2S">
+                <span>2S · Second Sitting</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Train Type -->
+          <div class="filter-group">
+            <h4 class="filter-group-title">Train type</h4>
+            <div class="checkbox-list">
+              <label class="checkbox-label">
+                <input type="checkbox" name="filter-type" value="Rajdhani">
+                <span>Rajdhani</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="filter-type" value="Vande Bharat">
+                <span>Vande Bharat</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="filter-type" value="Superfast">
+                <span>Superfast</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="filter-type" value="Express">
+                <span>Express</span>
+              </label>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Trains List Container -->
+        <div class="results-list-container">
+          <div class="results-meta-bar">
+            <h3 class="results-title">Find your next departure</h3>
+            <span id="results-count-text" class="results-count-text">3 trains · Fares shown per passenger</span>
+          </div>
+
+          <div id="trains-list" class="results-list-container">
+            <!-- Dynamically populated or rendered with skeletons/cards -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Popular Routes Section -->
+    <section class="container popular-routes-section" aria-labelledby="popular-routes-title">
+      <div class="section-header">
+        <h2 id="popular-routes-title" class="section-title">Popular routes</h2>
+        <p class="section-subtitle">Good journeys, great connections.</p>
+      </div>
+
+      <div class="routes-grid">
+        <!-- Route 01 -->
+        <article class="route-card" data-from="New Delhi (NDLS)" data-to="Mumbai Central (MMCT)" tabindex="0" role="button" aria-label="Book New Delhi to Mumbai">
+          <div class="route-card-top">
+            <span class="route-number">01</span>
+            <div>
+              <h3 class="route-destination">New Delhi → Mumbai</h3>
+              <p class="route-tagline">A night on the rails. A new city by morning.</p>
+            </div>
+          </div>
+          <div class="route-card-footer">
+            <span class="route-fare">From <strong>₹1,895</strong></span>
+            <span class="route-duration">16h 35m</span>
+          </div>
+        </article>
+
+        <!-- Route 02 -->
+        <article class="route-card" data-from="Bengaluru City (SBC)" data-to="Chennai Central (MAS)" tabindex="0" role="button" aria-label="Book Bengaluru to Chennai">
+          <div class="route-card-top">
+            <span class="route-number">02</span>
+            <div>
+              <h3 class="route-destination">Bengaluru → Chennai</h3>
+              <p class="route-tagline">The coast is closer than you think.</p>
+            </div>
+          </div>
+          <div class="route-card-footer">
+            <span class="route-fare">From <strong>₹620</strong></span>
+            <span class="route-duration">4h 20m</span>
+          </div>
+        </article>
+
+        <!-- Route 03 -->
+        <article class="route-card" data-from="Mumbai Central (MMCT)" data-to="Madgaon (Goa) (MAO)" tabindex="0" role="button" aria-label="Book Mumbai to Goa">
+          <div class="route-card-top">
+            <span class="route-number">03</span>
+            <div>
+              <h3 class="route-destination">Mumbai → Goa</h3>
+              <p class="route-tagline">Trade the city for a slower kind of day.</p>
+            </div>
+          </div>
+          <div class="route-card-footer">
+            <span class="route-fare">From <strong>₹890</strong></span>
+            <span class="route-duration">8h 45m</span>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- Booking Modal (<dialog>) (Figma 4:12135, 4:18638) -->
+  <dialog id="booking-modal" class="booking-dialog" aria-labelledby="modal-booking-title">
+    <!-- Form View -->
+    <div id="booking-form-view">
+      <div class="booking-header">
+        <h2 id="modal-booking-title" class="booking-title">Passenger details</h2>
+        <button type="button" id="btn-close-booking" class="btn-close-modal" aria-label="Close booking modal">✕</button>
+      </div>
+
+      <!-- Selected Train & Class Bar -->
+      <div class="booking-train-bar">
+        <div>
+          <div class="train-name-group">
+            <span id="modal-train-name" class="booking-train-name">Mumbai Rajdhani</span>
+            <span id="modal-train-number" class="train-number">12952</span>
+          </div>
+          <p id="modal-journey-summary" class="booking-journey-desc">New Delhi → Mumbai Central · 16:55 → 08:35</p>
+        </div>
+        <select id="modal-class-select" class="booking-class-select" aria-label="Select class">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+
+      <!-- Validation Error Banner (Figma 4:18887) -->
+      <div id="booking-validation-alert" class="booking-validation-error" role="alert">
+        <h3 class="validation-error-title">! Check passenger details</h3>
+        <p class="validation-error-desc">Enter a full name and an age from 1 to 120.</p>
+      </div>
+
+      <!-- Booking Form -->
+      <form id="booking-details-form" novalidate>
+        <div id="passenger-rows-container" class="passenger-list-container">
+          <!-- Dynamic passenger rows (1-6) -->
+        </div>
+
+        <div class="add-passenger-wrapper">
+          <button type="button" id="btn-add-passenger" class="btn btn-add-passenger">+ Add passenger</button>
+          <p class="passenger-limit-note">Up to 6 passengers. Use names shown on your ID.</p>
+        </div>
+
+        <!-- Fare Summary Bar -->
+        <div class="booking-fare-bar">
+          <div>
+            <div class="fare-calc-label">Base fare × passengers</div>
+            <div class="fare-formula-display">
+              <span id="fare-base-times" class="fare-base-times">₹1,895 × 1 =</span>
+              <span id="fare-total-amount" class="fare-total-number">₹1,895</span>
+            </div>
+            <span class="fare-caption-text">Total fare · no hidden fees</span>
+          </div>
+
+          <button type="submit" id="btn-confirm-booking" class="btn btn-primary">
+            <span>Confirm booking</span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Booking Success View (Figma 4:20277) -->
+    <div id="booking-success-view" class="booking-success-view">
+      <span class="success-badge">✓ BOOKING CONFIRMED</span>
+      <h2 class="success-title">You’re going to <span id="success-destination">Mumbai</span>.</h2>
+      <p class="section-subtitle" style="margin-bottom: var(--space-4);">Your ticket is ready. A new journey awaits.</p>
+      <div>
+        <span id="success-pnr-display" class="success-pnr-tag">PNR: 4827361950</span>
+      </div>
+      <div class="success-actions">
+        <a id="btn-view-ticket" href="pnr.html#ticket" class="btn btn-primary">View E-ticket →</a>
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('booking-modal').close()">Done</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        RAILGO / MADE FOR THE JOURNEY
+      </div>
+      <div class="footer-trust">
+        Secure booking · Clear fares · All aboard
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/booking.js"></script>
+</body>
+</html>

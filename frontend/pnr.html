@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RailGo — PNR Status & E-Ticket</title>
+  <meta name="description" content="Check Indian Railways 10-digit PNR status, live coach and berth allocations, and view or print your digital e-ticket.">
+
+  <!-- Google Fonts: Bricolage Grotesque, DM Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Site Navigation -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo" aria-label="RailGo Home">
+        <span class="brand-arrow" aria-hidden="true">↗</span>
+        <span>RailGo</span>
+      </a>
+
+      <nav aria-label="Primary Navigation">
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Book trains</a></li>
+          <li><a href="pnr.html" class="nav-link active" aria-current="page">PNR status</a></li>
+          <li><a href="pnr.html#ticket" class="nav-link">My tickets</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <span class="currency-badge" title="Region & Currency">IN / ₹</span>
+        <button id="motion-toggle-btn" class="btn-motion-toggle" aria-pressed="false" title="Toggle animation effects">
+          <span aria-hidden="true">⚡</span>
+          <span>Reduce motion</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <!-- PNR Hero & Lookup Section (Figma 4:12139) -->
+    <section class="pnr-page-hero" aria-labelledby="pnr-page-title">
+      <div class="container">
+        <span class="hero-kicker">STAY ON TRACK</span>
+        <h1 id="pnr-page-title" class="hero-title" style="margin-bottom: var(--space-2);">
+          One number.<br>Your whole journey.
+        </h1>
+        <p class="hero-description" style="margin-bottom: var(--space-4);">
+          Check your booking, berth and departure in one place.
+        </p>
+
+        <!-- 10-Digit PNR Lookup Box -->
+        <div class="pnr-lookup-box">
+          <form id="pnr-search-form" novalidate>
+            <div class="pnr-input-row">
+              <div class="pnr-input-group">
+                <label for="pnr-input" class="form-label">10-digit PNR</label>
+                <input type="text" id="pnr-input" class="form-input pnr-mono-input"
+                       value="4827361950" maxlength="10" placeholder="e.g. 4827361950"
+                       autocomplete="off" required aria-describedby="pnr-helper-message">
+              </div>
+              <button type="submit" class="btn btn-primary" style="height: 52px; padding: 0 28px;">
+                Check PNR
+              </button>
+            </div>
+            <p id="pnr-helper-message" class="pnr-helper-text">
+              Find your PNR on your ticket or booking message.
+            </p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- PNR Status & Timeline Section -->
+    <section id="pnr-result-section" class="container pnr-result-section" aria-label="PNR Status and Journey Timeline">
+      <div class="pnr-result-grid">
+        <!-- Journey Timeline Card -->
+        <div class="timeline-card">
+          <div class="timeline-card-header">
+            <div>
+              <h2 id="tl-train-title" class="timeline-train-title">Mumbai Rajdhani</h2>
+              <span id="tl-train-meta" class="timeline-train-meta">12952 · 3A · AC 3 tier</span>
+            </div>
+            <span class="status-pill confirmed">✓ Confirmed</span>
+          </div>
+
+          <!-- Vertical Timeline Track -->
+          <div class="vertical-timeline" role="list" aria-label="Journey Progress">
+            <!-- Step 1: Booked -->
+            <div class="timeline-step completed" role="listitem">
+              <div class="timeline-node" aria-hidden="true"></div>
+              <div class="timeline-stage-title">Booked</div>
+              <div id="tl-booked-time" class="timeline-stage-time">10 Nov 2026 · 12:42</div>
+            </div>
+
+            <!-- Step 2: Departs -->
+            <div class="timeline-step active" role="listitem">
+              <div class="timeline-node" aria-hidden="true"></div>
+              <div id="tl-dep-station" class="timeline-stage-title">Departs · New Delhi</div>
+              <div id="tl-dep-time" class="timeline-stage-time">20 Nov 2026 · 16:55</div>
+            </div>
+
+            <!-- Step 3: Arrives -->
+            <div class="timeline-step" role="listitem">
+              <div class="timeline-node" aria-hidden="true"></div>
+              <div id="tl-arr-station" class="timeline-stage-title">Arrives · Mumbai Central</div>
+              <div id="tl-arr-time" class="timeline-stage-time">21 Nov 2026 · 08:35</div>
+            </div>
+          </div>
+
+          <div class="timeline-footer-note">
+            <span aria-hidden="true">●</span>
+            <span>Booked and ready. Your journey is ahead.</span>
+          </div>
+        </div>
+
+        <!-- Passenger Status Allocation Card -->
+        <div class="passenger-status-card">
+          <h2 class="passenger-status-title">Passenger details</h2>
+          <div id="pnr-passenger-status-list" class="status-passenger-list">
+            <!-- Populated dynamically -->
+          </div>
+
+          <a href="#ticket" class="btn btn-secondary" style="width: 100%;">
+            View boarding pass e-ticket ↓
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen 4: E-Ticket Boarding Pass with Pure CSS 3D Flip (Figma 4:12137, 4:23736) -->
+    <section id="ticket" class="container ticket-section" aria-labelledby="ticket-title">
+      <div class="ticket-header-group">
+        <span class="ticket-kicker">YOUR JOURNEY, ALL SET</span>
+        <h2 id="ticket-title" class="ticket-heading">Your ticket to somewhere new.</h2>
+        <p class="section-subtitle">Save it. Share it. See you on the platform.</p>
+      </div>
+
+      <!-- 3D Flippable Ticket Scene -->
+      <div id="ticket-3d-scene" class="ticket-3d-scene">
+        <div class="ticket-flipper">
+
+          <!-- FRONT FACE (Boarding Pass Layout) -->
+          <article class="ticket-card-face ticket-face-front" aria-label="E-Ticket Front">
+            <!-- Header -->
+            <div class="ticket-face-header">
+              <div class="ticket-brand">
+                <span class="brand-arrow" aria-hidden="true">↗</span>
+                <span>RailGo</span>
+              </div>
+              <span class="status-pill confirmed">✓ Confirmed</span>
+            </div>
+
+            <!-- Journey Summary -->
+            <div class="ticket-journey-body">
+              <div class="ticket-train-info">
+                <div>
+                  <h3 id="ticket-train-name" class="ticket-train-title">Mumbai Rajdhani</h3>
+                  <span id="ticket-train-number" class="train-number">12952</span>
+                </div>
+                <span id="ticket-class" class="ticket-class-badge">3A · AC 3 tier</span>
+              </div>
+
+              <div class="ticket-route-row">
+                <div>
+                  <div id="ticket-dep-time" class="ticket-time-lg">16:55</div>
+                  <div id="ticket-from-station" class="schedule-station">New Delhi</div>
+                </div>
+
+                <div class="duration-track-container">
+                  <span id="ticket-duration" class="duration-label">15h 40m →</span>
+                  <div class="duration-line">
+                    <img src="assets/train-marker.svg" class="duration-marker-icon" alt="" aria-hidden="true">
+                  </div>
+                </div>
+
+                <div style="text-align: right;">
+                  <div id="ticket-arr-time" class="ticket-time-lg">08:35</div>
+                  <div id="ticket-to-station" class="schedule-station">Mumbai Central</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Authentic Boarding-Pass Perforation Notch Divider -->
+            <div class="ticket-perforation-divider" aria-hidden="true">
+              <span class="notch-left"></span>
+              <div class="perforation-dashed-line"></div>
+              <span class="notch-right"></span>
+            </div>
+
+            <!-- Travel Metadata -->
+            <div class="ticket-meta-grid">
+              <div class="ticket-meta-col">
+                <span class="ticket-meta-lbl">Departure date</span>
+                <span id="ticket-dep-date" class="ticket-meta-val">20 Nov 2026</span>
+              </div>
+              <div class="ticket-meta-col">
+                <span class="ticket-meta-lbl">Coach</span>
+                <span id="ticket-coach" class="ticket-meta-val">B4</span>
+              </div>
+              <div class="ticket-meta-col">
+                <span class="ticket-meta-lbl">Arrival date</span>
+                <span id="ticket-arr-date" class="ticket-meta-val">21 Nov 2026</span>
+              </div>
+            </div>
+
+            <!-- Passenger Manifest -->
+            <div class="ticket-manifest">
+              <div class="manifest-heading-row">
+                <span>Passenger</span>
+                <span>Coach / Seat / Berth</span>
+              </div>
+              <div id="ticket-manifest-list">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Identity Footer with PNR and QR -->
+            <div class="ticket-identity-footer">
+              <div class="pnr-display-box">
+                <span class="pnr-tag-label">YOUR PNR</span>
+                <span id="ticket-pnr-display" class="pnr-tag-value">4827361950</span>
+                <p class="ticket-id-reminder">Carry a valid photo ID. Arrive 30 minutes before departure.</p>
+                <button type="button" id="btn-flip-to-back" class="btn-flip-ticket">
+                  <span>↻</span>
+                  <span>Tap to flip ticket</span>
+                </button>
+              </div>
+
+              <div class="ticket-qr-container">
+                <img src="assets/qr-placeholder.svg" class="ticket-qr-img" alt="QR Code" width="90" height="90">
+                <span class="sr-only">PNR QR code</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- BACK FACE (Travel Conditions & Guidelines) -->
+          <article class="ticket-card-face ticket-face-back" aria-label="E-Ticket Back">
+            <!-- Header -->
+            <div class="ticket-face-header">
+              <div class="ticket-brand">
+                <span class="brand-arrow" aria-hidden="true">↗</span>
+                <span>RailGo</span>
+              </div>
+              <span class="status-pill confirmed">✓ Confirmed</span>
+            </div>
+
+            <!-- Terms Body -->
+            <div class="ticket-terms-body">
+              <h3 class="terms-title">A few things before you go</h3>
+              <ol class="terms-ordered-list">
+                <li>
+                  <span class="terms-num">01</span>
+                  <span>Bring the original photo ID used for booking (Aadhaar, Passport, Voter ID, or Driving License).</span>
+                </li>
+                <li>
+                  <span class="terms-num">02</span>
+                  <span>Arrive at least 30 minutes prior to scheduled departure at the origin platform.</span>
+                </li>
+                <li>
+                  <span class="terms-num">03</span>
+                  <span>E-tickets shown on mobile devices are fully valid; printed copies are optional.</span>
+                </li>
+                <li>
+                  <span class="terms-num">04</span>
+                  <span>Please follow all coach guidelines, respect silence hours (22:00 - 06:00), and keep luggage within allowances.</span>
+                </li>
+              </ol>
+            </div>
+
+            <!-- Back Identity Footer -->
+            <div class="ticket-identity-footer">
+              <div class="pnr-display-box">
+                <span class="pnr-tag-label">PNR</span>
+                <span id="ticket-back-pnr" class="pnr-tag-value" style="font-size: 1.5rem;">4827361950</span>
+                <button type="button" id="btn-flip-to-front" class="btn-flip-ticket">
+                  <span>↻</span>
+                  <span>Return to ticket</span>
+                </button>
+              </div>
+
+              <div class="ticket-qr-container">
+                <img src="assets/qr-placeholder.svg" class="ticket-qr-img" alt="QR Code" width="80" height="80">
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+
+      <!-- Ticket Actions Toolbar -->
+      <div class="ticket-actions-toolbar">
+        <button type="button" id="btn-print-ticket" class="btn btn-primary">
+          <span aria-hidden="true">🖨</span>
+          <span>Print / Save as PDF</span>
+        </button>
+        <a href="index.html" class="btn btn-secondary">
+          Book another train
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <div class="footer-brand">
+        RAILGO / MADE FOR THE JOURNEY
+      </div>
+      <div class="footer-trust">
+        Secure booking · Clear fares · All aboard
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/ticket.js"></script>
+</body>
+</html>
+
