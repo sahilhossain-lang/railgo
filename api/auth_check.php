@@ -11,13 +11,21 @@ require_once __DIR__ . '/../backend/models/User.php';
 
 setRestHeaders();
 
-$userModel = new User();
-$currentUser = $userModel->getCurrentUser();
-$csrfToken = generateCsrfToken();
+try {
+    $userModel = new User();
+    $currentUser = $userModel->getCurrentUser();
+    $csrfToken = generateCsrfToken();
 
-sendJsonResponse(true, [
-    'logged_in'  => ($currentUser !== null),
-    'user'       => $currentUser,
-    'csrf_token' => $csrfToken
-], 'Session status retrieved.');
+    sendJsonResponse(true, [
+        'logged_in'  => ($currentUser !== null),
+        'user'       => $currentUser,
+        'csrf_token' => $csrfToken
+    ], 'Session status retrieved.');
+} catch (Throwable $e) {
+    sendJsonResponse(true, [
+        'logged_in'  => false,
+        'user'       => null,
+        'csrf_token' => generateCsrfToken()
+    ], 'Session initialized.');
+}
 

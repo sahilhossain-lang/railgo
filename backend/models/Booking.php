@@ -417,6 +417,87 @@ class Booking {
         ];
     }
 
+    /**
+     * Retrieve list of recent bookings.
+     */
+    public function getHistory(?int $userId = null, int $limit = 10): array {
+        $limit = max(1, min(50, $limit));
+
+        if ($this->db !== null) {
+            try {
+                $sql = "SELECT * FROM `bookings` ORDER BY id DESC LIMIT :limit";
+                $stmt = $this->db->prepare($sql);
+                $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+                $stmt->execute();
+                $rows = $stmt->fetchAll();
+
+                $history = [];
+                foreach ($rows as $b) {
+                    $pStmt = $this->db->prepare("SELECT name, age, gender, assigned_coach as coach, assigned_seat as seat, berth_pref, status FROM `passengers` WHERE booking_id = :bid");
+                    $pStmt->execute([':bid' => $b['id']]);
+                    $passengers = $pStmt->fetchAll();
+
+                    $jDate = $b['journey_date'];
+                    $arrDate = $this->calculateArrivalDate($jDate, (string)$b['departure_time'], (string)$b['arrival_time'], (string)$b['duration']);
+
+                    $history[] = [
+                        'pnr'            => $b['pnr'],
+                        'train_name'     => $b['train_name'],
+                        'train_number'   => $b['train_number'],
+                        'from_name'      => $b['from_name'],
+                        'to_name'        => $b['to_name'],
+                        'departure_date' => date('d M Y', strtotime($jDate)),
+                        'departure_time' => $b['departure_time'],
+                        'arrival_date'   => $arrDate,
+                        'arrival_time'   => $b['arrival_time'],
+                        'duration'       => $b['duration'],
+                        'class_code'     => $b['class_code'],
+                        'total_fare'     => (float)$b['total_fare'],
+                        'status'         => $b['booking_status'],
+                        'status_label'   => ($b['booking_status'] === 'Confirmed') ? '✓ Confirmed' : $b['booking_status'],
+                        'booking_date'   => date('d M Y · H:i', strtotime($b['created_at'])),
+                        'passengers'     => $passengers
+                    ];
+                }
+                return $history;
+            } catch (Throwable $e) {}
+        }
+
+        // Offline JSON store
+        $file = __DIR__ . '/../../database/real_bookings.json';
+        if (file_exists($file)) {
+            $store = json_decode(file_get_contents($file), true);
+            if (is_array($store)) {
+                $items = array_values($store);
+                usort($items, fn($a, $b) => strcmp($b['created_at'] ?? '', $a['created_at'] ?? ''));
+                $slice = array_slice($items, 0, $limit);
+                return array_map(function($item) {
+                    $jDate = $item['journey_date'] ?? date('Y-m-d');
+                    return [
+                        'pnr'            => $item['pnr'],
+                        'train_name'     => $item['train_name'],
+                        'train_number'   => $item['train_number'],
+                        'from_name'      => $item['from_name'],
+                        'to_name'        => $item['to_name'],
+                        'departure_date' => $item['departure_date'] ?? date('d M Y', strtotime($jDate)),
+                        'departure_time' => $item['departure_time'],
+                        'arrival_date'   => $item['arrival_date'] ?? $this->calculateArrivalDate($jDate, (string)$item['departure_time'], (string)$item['arrival_time'], (string)$item['duration']),
+                        'arrival_time'   => $item['arrival_time'],
+                        'duration'       => $item['duration'],
+                        'class_code'     => $item['class_code'],
+                        'total_fare'     => (float)($item['total_fare'] ?? 0),
+                        'status'         => $item['status'] ?? 'Confirmed',
+                        'status_label'   => '✓ Confirmed',
+                        'booking_date'   => date('d M Y · H:i', strtotime($item['created_at'] ?? 'now')),
+                        'passengers'     => $item['passengers'] ?? []
+                    ];
+                }, $slice);
+            }
+        }
+
+        return [];
+    }
+
     private function generateUniquePNR(): string {
         if ($this->db !== null) {
             $stmt = $this->db->prepare("SELECT 1 FROM `bookings` WHERE pnr = :pnr LIMIT 1");

@@ -9,10 +9,14 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/Database.php';
 
 class User {
-    private PDO $db;
+    private ?PDO $db;
 
     public function __construct(?PDO $db = null) {
-        $this->db = $db ?? Database::getConnection();
+        try {
+            $this->db = $db ?? Database::getConnection();
+        } catch (Throwable $e) {
+            $this->db = null;
+        }
     }
 
     /**
