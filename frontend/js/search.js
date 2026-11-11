@@ -414,7 +414,9 @@ document.addEventListener('DOMContentLoaded', () => {
                   data-arrival="${RailGoAPI.escapeHTML(train.arrival_time)}"
                   data-duration="${RailGoAPI.escapeHTML(train.duration)}"
                   data-from="${RailGoAPI.escapeHTML(train.from_name)}"
+                  data-from-code="${RailGoAPI.escapeHTML(train.from_code || '')}"
                   data-to="${RailGoAPI.escapeHTML(train.to_name)}"
+                  data-to-code="${RailGoAPI.escapeHTML(train.to_code || '')}"
                   ${cInfo.status === 'soldout' ? 'disabled' : ''}>
             <div class="class-chip-top">
               <span class="class-code">${RailGoAPI.escapeHTML(code)}</span>
@@ -478,8 +480,10 @@ document.addEventListener('DOMContentLoaded', () => {
           departure_time: chip.getAttribute('data-departure'),
           arrival_time: chip.getAttribute('data-arrival'),
           duration: chip.getAttribute('data-duration'),
-          from_name: chip.getAttribute('data-from'),
-          to_name: chip.getAttribute('data-to'),
+          from_code: chip.getAttribute('data-from-code') || (fromInput ? (fromInput.value.match(/\(([A-Z0-9]+)\)/) || [,'HWH'])[1] : 'HWH'),
+          from_name: chip.getAttribute('data-from') || (fromInput ? fromInput.value.replace(/\s*\([A-Z0-9]+\)/, '').trim() : 'Howrah Jn'),
+          to_code: chip.getAttribute('data-to-code') || (toInput ? (toInput.value.match(/\(([A-Z0-9]+)\)/) || [,'NJP'])[1] : 'NJP'),
+          to_name: chip.getAttribute('data-to') || (toInput ? toInput.value.replace(/\s*\([A-Z0-9]+\)/, '').trim() : 'New Jalpaiguri'),
           journey_date: departureDateInput.value || '2026-11-20'
         };
 

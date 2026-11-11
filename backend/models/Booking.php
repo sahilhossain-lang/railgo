@@ -71,17 +71,51 @@ class Booking {
 
         $passengerCount = count($validatedPassengers);
 
-        $trainName = $payload['train_name'] ?? 'Express Train';
-        $fromCode = $payload['from_code'] ?? 'NDLS';
-        $fromName = $payload['from_name'] ?? 'New Delhi';
-        $toCode = $payload['to_code'] ?? 'BCT';
-        $toName = $payload['to_name'] ?? 'Mumbai Central';
-        $depTime = $payload['departure_time'] ?? '16:55';
-        $arrTime = $payload['arrival_time'] ?? '08:35';
-        $duration = $payload['duration'] ?? '15h 40m';
-        $durH = 15;
+        $trainName = trim((string)($payload['train_name'] ?? ''));
+        $fromCode = trim((string)($payload['from_code'] ?? ''));
+        $fromName = trim((string)($payload['from_name'] ?? ''));
+        $toCode = trim((string)($payload['to_code'] ?? ''));
+        $toName = trim((string)($payload['to_name'] ?? ''));
+        $depTime = trim((string)($payload['departure_time'] ?? ''));
+        $arrTime = trim((string)($payload['arrival_time'] ?? ''));
+        $duration = trim((string)($payload['duration'] ?? ''));
+        $durH = 3;
 
-        $baseFare = (float)($payload['base_fare'] ?? 1895.00);
+        // If database is available, lookup train catalog if any attributes are missing
+        if ($this->db !== null) {
+            try {
+                $tStmt = $this->db->prepare("SELECT * FROM `trains` WHERE number = :num LIMIT 1");
+                $tStmt->execute([':num' => $trainNumber]);
+                $train = $tStmt->fetch();
+
+                if ($train) {
+                    if (empty($trainName)) $trainName = $train['name'];
+                    if (empty($fromCode)) $fromCode = $train['from_station_code'];
+                    if (empty($fromName)) $fromName = $train['from_station_name'];
+                    if (empty($toCode)) $toCode = $train['to_station_code'];
+                    if (empty($toName)) $toName = $train['to_station_name'];
+                    if (empty($depTime)) $depTime = substr((string)$train['departure'], 0, 5);
+                    if (empty($arrTime)) $arrTime = substr((string)$train['arrival'], 0, 5);
+                    if (empty($duration)) {
+                        $durH = (int)$train['duration_h'];
+                        $durM = (int)$train['duration_m'];
+                        $duration = "{$durH}h {$durM}m";
+                    }
+                }
+            } catch (Throwable $e) {}
+        }
+
+        // Safe defaults from current West Bengal dataset if still empty
+        if (empty($trainName)) $trainName = 'Express Train';
+        if (empty($fromCode)) $fromCode = 'HWH';
+        if (empty($fromName)) $fromName = 'Howrah Jn';
+        if (empty($toCode)) $toCode = 'NJP';
+        if (empty($toName)) $toName = 'New Jalpaiguri';
+        if (empty($depTime)) $depTime = '06:40';
+        if (empty($arrTime)) $arrTime = '10:00';
+        if (empty($duration)) $duration = '3h 20m';
+
+        $baseFare = (float)($payload['base_fare'] ?? 450.00);
         $totalFare = $baseFare * $passengerCount;
 
         // Generate unique 10-digit PNR
@@ -93,24 +127,6 @@ class Booking {
             $this->db->beginTransaction();
 
             try {
-                // Find train from trains table
-                $tStmt = $this->db->prepare("SELECT * FROM `trains` WHERE number = :num LIMIT 1");
-                $tStmt->execute([':num' => $trainNumber]);
-                $train = $tStmt->fetch();
-
-                if ($train) {
-                    $trainName = $train['name'];
-                    $fromCode = $train['from_station_code'];
-                    $fromName = $train['from_station_name'];
-                    $toCode = $train['to_station_code'];
-                    $toName = $train['to_station_name'];
-                    $depTime = substr((string)$train['departure'], 0, 5);
-                    $arrTime = substr((string)$train['arrival'], 0, 5);
-                    $durH = (int)$train['duration_h'];
-                    $durM = (int)$train['duration_m'];
-                    $duration = "{$durH}h {$durM}m";
-                }
-
                 // Insert into bookings table
                 $bInsert = $this->db->prepare(
                     "INSERT INTO `bookings` (pnr, train_number, train_name, from_code, from_name, to_code, to_name,

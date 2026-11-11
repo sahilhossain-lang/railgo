@@ -39,12 +39,37 @@ class Train {
         ?string $typeFilter = null,
         ?string $slotFilter = null
     ): array {
-        $cleanFrom = strtoupper(trim($from));
-        $cleanTo = strtoupper(trim($to));
+        $rawFrom = trim($from);
+        $rawTo = trim($to);
 
-        // Normalize common alias codes: MMCT -> BCT
-        if ($cleanFrom === 'MMCT') $cleanFrom = 'BCT';
-        if ($cleanTo === 'MMCT') $cleanTo = 'BCT';
+        $fromCode = strtoupper($rawFrom);
+        if (preg_match('/\(([A-Z0-9]+)\)/i', $rawFrom, $m)) {
+            $fromCode = strtoupper($m[1]);
+        }
+        $toCode = strtoupper($rawTo);
+        if (preg_match('/\(([A-Z0-9]+)\)/i', $rawTo, $m)) {
+            $toCode = strtoupper($m[1]);
+        }
+
+        $fromCleanName = strtoupper(trim(preg_replace('/\s*\([A-Z0-9]+\)/i', '', $rawFrom)));
+        $toCleanName = strtoupper(trim(preg_replace('/\s*\([A-Z0-9]+\)/i', '', $rawTo)));
+
+        $simplifiedFrom = trim(preg_replace('/\b(JN|JUNCTION|TERMINUS|TERMINAL|CENTRAL|CANTT)\b/i', '', $fromCleanName));
+        $simplifiedTo = trim(preg_replace('/\b(JN|JUNCTION|TERMINUS|TERMINAL|CENTRAL|CANTT)\b/i', '', $toCleanName));
+
+        $matchStation = function(string $code, string $name, string $targetCode, string $targetName, string $targetSimple): bool {
+            if ($targetCode !== '' && $code === $targetCode) return true;
+            if ($targetName !== '' && (str_contains($name, $targetName) || str_contains($targetName, $name))) return true;
+            if ($targetSimple !== '' && (str_contains($name, $targetSimple) || str_contains($targetSimple, $name))) return true;
+            if ($targetCode !== '' && str_contains($name, $targetCode)) return true;
+            return false;
+        };
+
+        if ($fromCode === 'MMCT') $fromCode = 'BCT';
+        if ($toCode === 'MMCT') $toCode = 'BCT';
+
+        $cleanFrom = $fromCode;
+        $cleanTo = $toCode;
 
         $merged = [];
 
@@ -57,14 +82,16 @@ class Train {
 
                 $stmt = $this->db->prepare($sqlDirect);
                 $stmt->execute([
-                    ':from_code' => $cleanFrom,
-                    ':from_name' => "%{$cleanFrom}%",
-                    ':to_code'   => $cleanTo,
-                    ':to_name'   => "%{$cleanTo}%"
+                    ':from_code' => $fromCode,
+                    ':from_name' => "%{$fromCleanName}%",
+                    ':to_code'   => $toCode,
+                    ':to_name'   => "%{$toCleanName}%"
                 ]);
                 $directTrains = $stmt->fetchAll();
 
                 $sqlSchedule = "SELECT DISTINCT t.*, s1.departure as sched_dep, s2.arrival as sched_arr,
+                                       s1.station_code as sched_from_code, s1.station_name as sched_from_name,
+                                       s2.station_code as sched_to_code, s2.station_name as sched_to_name,
                                        s1.day as dep_day, s2.day as arr_day
                                 FROM `schedules` s1
                                 JOIN `schedules` s2 ON s1.train_number = s2.train_number
@@ -76,10 +103,10 @@ class Train {
 
                 $schedStmt = $this->db->prepare($sqlSchedule);
                 $schedStmt->execute([
-                    ':from_code' => $cleanFrom,
-                    ':from_name' => "%{$cleanFrom}%",
-                    ':to_code'   => $cleanTo,
-                    ':to_name'   => "%{$cleanTo}%"
+                    ':from_code' => $fromCode,
+                    ':from_name' => "%{$fromCleanName}%",
+                    ':to_code'   => $toCode,
+                    ':to_name'   => "%{$toCleanName}%"
                 ]);
                 $schedTrains = $schedStmt->fetchAll();
 
@@ -102,6 +129,10 @@ class Train {
                         if (!empty($t['sched_arr']) && $t['sched_arr'] !== 'None') {
                             $t['arrival'] = $t['sched_arr'];
                         }
+                        $t['journey_from_code'] = $t['sched_from_code'] ?? null;
+                        $t['journey_from_name'] = $t['sched_from_name'] ?? null;
+                        $t['journey_to_code'] = $t['sched_to_code'] ?? null;
+                        $t['journey_to_name'] = $t['sched_to_name'] ?? null;
                         $merged[] = $t;
                     }
                 }
@@ -144,9 +175,12 @@ class Train {
                         foreach ($stops as $idx => $s) {
                             $code = strtoupper($s['code'] ?? '');
                             $name = strtoupper($s['name'] ?? '');
-                            if ($fromStop === null && ($code === $cleanFrom || str_contains($name, $cleanFrom))) {
+                            $matchF = $matchStation($code, $name, $fromCode, $fromCleanName, $simplifiedFrom);
+                            $matchT = $matchStation($code, $name, $toCode, $toCleanName, $simplifiedTo);
+
+                            if ($fromStop === null && $matchF) {
                                 $fromStop = array_merge($s, ['idx' => $idx]);
-                            } elseif ($fromStop !== null && ($code === $cleanTo || str_contains($name, $cleanTo))) {
+                            } elseif ($fromStop !== null && $matchT) {
                                 $toStop = array_merge($s, ['idx' => $idx]);
                                 break;
                             }
@@ -156,6 +190,10 @@ class Train {
                             $t = $trainsByNum[$tnum];
                             if (!empty($fromStop['dep'])) $t['departure'] = $fromStop['dep'];
                             if (!empty($toStop['arr'])) $t['arrival'] = $toStop['arr'];
+                            $t['journey_from_code'] = $fromStop['code'];
+                            $t['journey_from_name'] = $fromStop['name'];
+                            $t['journey_to_code'] = $toStop['code'];
+                            $t['journey_to_name'] = $toStop['name'];
                             $merged[] = $t;
                             $seen[$tnum] = true;
                         }
@@ -170,8 +208,8 @@ class Train {
                     $tCode = strtoupper($p['to_station_code']);
                     $tName = strtoupper($p['to_station_name']);
 
-                    $matchFrom = ($fCode === $cleanFrom || str_contains($fName, $cleanFrom));
-                    $matchTo = ($tCode === $cleanTo || str_contains($tName, $cleanTo));
+                    $matchFrom = $matchStation($fCode, $fName, $fromCode, $fromCleanName, $simplifiedFrom);
+                    $matchTo = $matchStation($tCode, $tName, $toCode, $toCleanName, $simplifiedTo);
 
                     if ($matchFrom && $matchTo) {
                         $merged[] = $p;
@@ -218,10 +256,10 @@ class Train {
                 'type'           => $type,
                 'category_tag'   => strtoupper($type) . ' · RUNS DAILY',
                 'hint'           => $train['zone'] ? "Zone {$train['zone']}" : 'Comfortable journey',
-                'from_code'      => $train['from_station_code'],
-                'from_name'      => $train['from_station_name'],
-                'to_code'        => $train['to_station_code'],
-                'to_name'        => $train['to_station_name'],
+                'from_code'      => $train['journey_from_code'] ?? $train['from_station_code'],
+                'from_name'      => $train['journey_from_name'] ?? $train['from_station_name'],
+                'to_code'        => $train['journey_to_code'] ?? $train['to_station_code'],
+                'to_name'        => $train['journey_to_name'] ?? $train['to_station_name'],
                 'departure_time' => $depTime,
                 'arrival_time'   => $arrTime,
                 'duration'       => $durationStr,

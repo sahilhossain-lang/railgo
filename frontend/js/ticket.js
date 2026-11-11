@@ -184,15 +184,19 @@ document.addEventListener('DOMContentLoaded', () => {
     ticketBackPnr.textContent = data.pnr;
 
     // Render manifest table
-    ticketManifestList.innerHTML = (data.passengers || []).map((p, idx) => `
+    ticketManifestList.innerHTML = (data.passengers || []).map((p, idx) => {
+      const ageNum = parseInt(p.age, 10);
+      const cat = isNaN(ageNum) ? 'Adult' : (ageNum < 12 ? 'Child' : (ageNum >= 60 ? 'Senior' : 'Adult'));
+      return `
       <div class="manifest-passenger-row">
         <div>
           <span class="manifest-p-name">${RailGoAPI.escapeHTML(p.name)}</span>
-          <span class="manifest-p-detail">${RailGoAPI.escapeHTML(p.age || 28)} · Adult</span>
+          <span class="manifest-p-detail">${RailGoAPI.escapeHTML(p.age || '')} · ${cat}</span>
         </div>
         <span class="manifest-p-seat">${RailGoAPI.escapeHTML(p.coach || data.coach)} / ${RailGoAPI.escapeHTML(p.seat || (20 + idx))} / ${RailGoAPI.escapeHTML(p.berth_pref || 'Lower')}</span>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   // 4. Pure CSS 3D Ticket Flip

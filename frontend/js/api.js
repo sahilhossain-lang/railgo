@@ -241,67 +241,6 @@ const RailGoAPI = (() => {
     return str.replace(/\s*\([A-Z0-9]+\)/, '').trim();
   }
 
-  // Generate dynamic trains for ANY other custom route pair
-  function generateCustomRouteTrains(fromStr, toStr) {
-    const fromName = extractCleanName(fromStr) || 'Origin';
-    const toName = extractCleanName(toStr) || 'Destination';
-    const fromCode = extractCode(fromStr) || 'ORIG';
-    const toCode = extractCode(toStr) || 'DEST';
-
-    return [
-      {
-        id: "12001",
-        name: `${toName} Superfast Express`,
-        number: "12001",
-        type: "Superfast",
-        category_tag: "SUPERFAST · RUNS DAILY",
-        hint: `Direct connect between ${fromName} and ${toName}`,
-        from_code: fromCode, from_name: fromName,
-        to_code: toCode, to_name: toName,
-        departure_time: "07:30", arrival_time: "17:15", duration: "9h 45m",
-        departure_slot: "morning", next_day: false,
-        classes: {
-          "3A": { name: "3A · AC 3 tier", fare: 1250, status: "available", seats: 48, label: "✓ Available · 48" },
-          "2A": { name: "2A · AC 2 tier", fare: 1780, status: "available", seats: 16, label: "✓ Available · 16" },
-          "SL": { name: "Sleeper Class", fare: 420, status: "available", seats: 92, label: "✓ Available · 92" }
-        }
-      },
-      {
-        id: "22015",
-        name: `${toName} Vande Bharat`,
-        number: "22015",
-        type: "Vande Bharat",
-        category_tag: "VANDE BHARAT · EXCEPT WED",
-        hint: "High-speed comfortable day service",
-        from_code: fromCode, from_name: fromName,
-        to_code: toCode, to_name: toName,
-        departure_time: "14:15", arrival_time: "20:45", duration: "6h 30m",
-        departure_slot: "afternoon", next_day: false,
-        classes: {
-          "CC": { name: "AC Chair Car", fare: 1450, status: "available", seats: 62, label: "✓ Available · 62" },
-          "EC": { name: "Exec Chair Car", fare: 2650, status: "warning", seats: 8, label: "◷ Seats left: 8" }
-        }
-      },
-      {
-        id: "12999",
-        name: `${fromName} - ${toName} Express`,
-        number: "12999",
-        type: "Express",
-        category_tag: "EXPRESS · RUNS DAILY",
-        hint: "Convenient overnight journey",
-        from_code: fromCode, from_name: fromName,
-        to_code: toCode, to_name: toName,
-        departure_time: "21:00", arrival_time: "08:20", duration: "11h 20m",
-        departure_slot: "evening", next_day: true,
-        classes: {
-          "3A": { name: "3A · AC 3 tier", fare: 1350, status: "available", seats: 34, label: "✓ Available · 34" },
-          "2A": { name: "2A · AC 2 tier", fare: 1950, status: "warning", seats: 6, label: "◷ Seats left: 6" },
-          "1A": { name: "1A · AC 1st Class", fare: 3200, status: "waitlist", seats: 4, label: "! Waitlist · 4" },
-          "SL": { name: "Sleeper Class", fare: 460, status: "available", seats: 78, label: "✓ Available · 78" }
-        }
-      }
-    ];
-  }
 
   // Session storage bookings store
   let memoryStore = {};
@@ -362,18 +301,21 @@ const RailGoAPI = (() => {
   async function searchTrains(params = {}) {
     const { from = 'Howrah Jn (HWH)', to = 'New Jalpaiguri (NJP)', date = '20 Nov 2026', travelClass = 'all' } = params;
 
+    const fromCode = extractCode(from) || from;
+    const toCode = extractCode(to) || to;
+
     // 1. Attempt Real PHP Backend API
     try {
       const query = new URLSearchParams({
-        from: from,
-        to: to,
+        from: fromCode,
+        to: toCode,
         date: date,
         class: travelClass
       });
       const res = await fetch(`${BASE_URL}/api/search_trains.php?${query.toString()}`);
       if (res.ok) {
         const json = await res.json();
-        if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
+        if (json.status === 'success' && Array.isArray(json.data)) {
           return {
             status: 'success',
             total: json.data.length,
@@ -387,47 +329,100 @@ const RailGoAPI = (() => {
         }
       }
     } catch (err) {
-      console.info('Backend search API unavailable, using offline fallback:', err.message);
+      console.info('Backend search API unavailable, using offline dataset lookup:', err.message);
     }
 
-    // Mock network delay
-    await new Promise(r => setTimeout(r, 380));
+    // 2. Offline dataset lookup using real West Bengal dataset index files
+    try {
+      const [rRes, tRes] = await Promise.all([
+        fetch(`${BASE_URL}/frontend/assets/wb_routes.json`),
+        fetch(`${BASE_URL}/frontend/assets/trains_index.json`)
+      ]);
+      if (rRes.ok && tRes.ok) {
+        const routes = await rRes.json();
+        const trainIndex = await tRes.json();
+        const trainMap = {};
+        trainIndex.forEach(t => { trainMap[t.number] = t; });
 
-    const fromCode = extractCode(from);
-    const toCode = extractCode(to);
-    const routeKey = `${fromCode}_${toCode}`;
-    const reverseRouteKey = `${toCode}_${fromCode}`;
+        const cleanFC = fromCode.toUpperCase().trim();
+        const cleanTC = toCode.toUpperCase().trim();
+        const cleanFN = extractCleanName(from).toUpperCase().trim();
+        const cleanTN = extractCleanName(to).toUpperCase().trim();
 
-    let results = [];
+        const results = [];
+        for (const [tnum, stops] of Object.entries(routes)) {
+          let fromStop = null;
+          let toStop = null;
+          for (let i = 0; i < stops.length; i++) {
+            const s = stops[i];
+            const sc = (s.code || '').toUpperCase();
+            const sn = (s.name || '').toUpperCase();
+            const matchF = (sc === cleanFC || sn.includes(cleanFN) || sn.includes(cleanFC));
+            const matchT = (sc === cleanTC || sn.includes(cleanTN) || sn.includes(cleanTC));
 
-    if (ROUTE_SCHEDULES[routeKey]) {
-      results = ROUTE_SCHEDULES[routeKey].map(t => ({ ...t }));
-    } else if (ROUTE_SCHEDULES[reverseRouteKey]) {
-      // Swapped route
-      results = ROUTE_SCHEDULES[reverseRouteKey].map(t => ({
-        ...t,
-        from_code: toCode, from_name: extractCleanName(from),
-        to_code: fromCode, to_name: extractCleanName(to)
-      }));
-    } else {
-      // Dynamically generate realistic trains for any chosen stations
-      results = generateCustomRouteTrains(from, to);
-    }
+            if (!fromStop && matchF) {
+              fromStop = { ...s, idx: i };
+            } else if (fromStop && matchT) {
+              toStop = { ...s, idx: i };
+              break;
+            }
+          }
 
-    // Filter by class if selected
-    if (travelClass && travelClass !== 'all') {
-      results = results.filter(t => t.classes && t.classes[travelClass]);
+          if (fromStop && toStop && trainMap[tnum]) {
+            const baseTrain = trainMap[tnum];
+            const depTime = (fromStop.dep && fromStop.dep !== 'None') ? fromStop.dep.slice(0, 5) : baseTrain.departure.slice(0, 5);
+            const arrTime = (toStop.arr && toStop.arr !== 'None') ? toStop.arr.slice(0, 5) : baseTrain.arrival.slice(0, 5);
+            const durH = parseInt(baseTrain.duration_h, 10) || 3;
+            const durM = parseInt(baseTrain.duration_m, 10) || 15;
+
+            results.push({
+              id: tnum,
+              name: baseTrain.name,
+              number: tnum,
+              type: baseTrain.type || 'Express',
+              category_tag: `${(baseTrain.type || 'EXP').toUpperCase()} · RUNS DAILY`,
+              hint: baseTrain.zone ? `Zone ${baseTrain.zone}` : 'Direct corridor',
+              from_code: fromStop.code,
+              from_name: fromStop.name,
+              to_code: toStop.code,
+              to_name: toStop.name,
+              departure_time: depTime,
+              arrival_time: arrTime,
+              duration: `${durH}h ${durM}m`,
+              classes: {
+                "3A": { name: "3A · AC 3 tier", fare: 750, status: "available", seats: 42, label: "✓ Available · 42" },
+                "2A": { name: "2A · AC 2 tier", fare: 1100, status: "warning", seats: 12, label: "◷ Seats left: 12" },
+                "CC": { name: "CC · Chair Car", fare: 450, status: "available", seats: 56, label: "✓ Available · 56" },
+                "SL": { name: "SL · Sleeper", fare: 280, status: "available", seats: 84, label: "✓ Available · 84" }
+              }
+            });
+          }
+        }
+
+        return {
+          status: 'success',
+          total: results.length,
+          from: from,
+          to: to,
+          date: date,
+          class: travelClass,
+          trains: results,
+          data: results
+        };
+      }
+    } catch (e) {
+      console.warn('Dataset route fallback failed:', e);
     }
 
     return {
       status: 'success',
-      total: results.length,
+      total: 0,
       from: from,
       to: to,
       date: date,
       class: travelClass,
-      trains: results,
-      data: results
+      trains: [],
+      data: []
     };
   }
 
@@ -470,35 +465,37 @@ const RailGoAPI = (() => {
 
     const assignedPassengers = (bookingData.passengers || []).map((p, idx) => ({
       name: p.name,
-      age: p.age,
+      age: parseInt(p.age, 10),
       gender: p.gender,
       berth_pref: p.berth_pref || 'No preference',
       coach: coachPrefix,
-      seat: String(18 + idx),
+      seat: String(21 + idx),
       status: '✓ Confirmed'
     }));
 
     const newTicket = {
       pnr: random10DigitPNR,
-      train_id: bookingData.train_id || "12952",
-      train_name: bookingData.train_name || "Mumbai Rajdhani",
-      train_number: bookingData.train_number || "12952",
-      class_code: bookingData.class_code,
-      class_name: `${bookingData.class_code} Class`,
-      from_name: bookingData.from_name || "New Delhi",
-      to_name: bookingData.to_name || "Mumbai Central",
-      departure_time: bookingData.departure_time || "16:55",
-      departure_date: bookingData.journey_date || "20 Nov 2026",
-      arrival_time: bookingData.arrival_time || "08:35",
-      arrival_date: "21 Nov 2026",
-      duration: bookingData.duration || "15h 40m",
+      train_id: bookingData.train_id || bookingData.train_number || '12345',
+      train_name: bookingData.train_name || 'Express Train',
+      train_number: bookingData.train_number || bookingData.train_id || '12345',
+      class_code: bookingData.class_code || '3A',
+      class_name: bookingData.class_name || `${bookingData.class_code || '3A'} Class`,
+      from_code: bookingData.from_code || 'HWH',
+      from_name: bookingData.from_name || 'Howrah Jn',
+      to_code: bookingData.to_code || 'NJP',
+      to_name: bookingData.to_name || 'New Jalpaiguri',
+      departure_time: bookingData.departure_time || '06:40',
+      departure_date: bookingData.journey_date || '20 Nov 2026',
+      arrival_time: bookingData.arrival_time || '10:00',
+      arrival_date: bookingData.journey_date || '20 Nov 2026',
+      duration: bookingData.duration || '3h 20m',
       coach: coachPrefix,
-      status: "Confirmed",
-      status_label: "✓ Confirmed",
+      status: 'Confirmed',
+      status_label: '✓ Confirmed',
       booking_date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ' · ' +
                     new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
       passengers: assignedPassengers,
-      total_fare: (bookingData.base_fare || 1895) * assignedPassengers.length
+      total_fare: (bookingData.base_fare || 450) * assignedPassengers.length
     };
 
     saveBooking(random10DigitPNR, newTicket);

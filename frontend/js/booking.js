@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <!-- Age -->
         <div class="form-group">
           <label class="form-label" for="p-age-${index}">Age</label>
-          <input type="number" id="p-age-${index}" class="form-input p-age" placeholder="Age" min="1" max="120" required>
+          <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" id="p-age-${index}" class="form-input p-age" placeholder="Age" required autocomplete="off">
         </div>
 
         <!-- Gender Segmented Control -->
@@ -149,6 +149,14 @@ document.addEventListener('DOMContentLoaded', () => {
         rowEl.remove();
         reindexPassengers();
         updateFareSummary();
+      });
+    }
+
+    // Direct typing sanitizer for age input
+    const ageInput = rowEl.querySelector('.p-age');
+    if (ageInput) {
+      ageInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 3);
       });
     }
 
@@ -240,6 +248,16 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const payload = {
           train_id: currentTrainData.train_id,
+          train_name: currentTrainData.train_name,
+          train_number: currentTrainData.train_number,
+          from_code: currentTrainData.from_code,
+          from_name: currentTrainData.from_name,
+          to_code: currentTrainData.to_code,
+          to_name: currentTrainData.to_name,
+          departure_time: currentTrainData.departure_time,
+          arrival_time: currentTrainData.arrival_time,
+          duration: currentTrainData.duration,
+          base_fare: currentTrainData.base_fare,
           class_code: currentTrainData.class_code,
           journey_date: currentTrainData.journey_date,
           passengers: passengersData

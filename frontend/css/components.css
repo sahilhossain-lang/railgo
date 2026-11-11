@@ -1389,6 +1389,19 @@
   align-items: flex-end;
 }
 
+.form-input.p-age {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.form-input.p-age::-webkit-inner-spin-button,
+.form-input.p-age::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* Gender Segmented Control */
 .gender-control {
   display: flex;
