@@ -37,22 +37,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const clearToBtn = document.getElementById('btn-clear-to');
 
   const STATIONS = [
-    { name: "New Delhi", code: "NDLS" },
-    { name: "Mumbai Central", code: "MMCT" },
-    { name: "Madgaon (Goa)", code: "MAO" },
-    { name: "Bengaluru City", code: "SBC" },
-    { name: "Chennai Central", code: "MAS" },
-    { name: "Howrah (Kolkata)", code: "HWH" },
-    { name: "Varanasi Jn", code: "BSB" },
-    { name: "Jaipur Jn", code: "JP" },
-    { name: "Ahmedabad Jn", code: "ADI" },
-    { name: "Secunderabad (Hyderabad)", code: "SC" },
-    { name: "Pune Jn", code: "PUNE" },
-    { name: "Lucknow Charbagh", code: "LKO" },
-    { name: "Amritsar Jn", code: "ASR" },
-    { name: "Patna Jn", code: "PNBE" },
-    { name: "Bhopal Jn", code: "BPL" },
-    { name: "Chandigarh", code: "CDG" }
+    { name: "Howrah Jn", code: "HWH" },
+    { name: "Kolkata Sealdah", code: "SDAH" },
+    { name: "Kharagpur Jn", code: "KGP" },
+    { name: "New Jalpaiguri", code: "NJP" },
+    { name: "Asansol Jn", code: "ASN" },
+    { name: "Durgapur", code: "DGR" },
+    { name: "Barddhaman Jn", code: "BWN" },
+    { name: "Malda Town", code: "MLDT" },
+    { name: "Lalgola", code: "LGL" },
+    { name: "Digha", code: "DGHA" },
+    { name: "Kolkata Chitpur", code: "KOAA" },
+    { name: "Kolkata Shalimar", code: "SHM" },
+    { name: "Rampur Hat", code: "RPH" },
+    { name: "Bolpur Shantiniketan", code: "BHP" },
+    { name: "Bandel Jn", code: "BDC" },
+    { name: "Balurghat", code: "BLGT" }
   ];
 
   function setupAutocomplete(inputElement, dropdownId, clearBtn) {
@@ -225,8 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function executeSearch() {
-    const fromVal = fromInput.value.trim() || 'New Delhi (NDLS)';
-    const toVal = toInput.value.trim() || 'Mumbai Central (MMCT)';
+    const fromVal = fromInput.value.trim() || 'Howrah Jn (HWH)';
+    const toVal = toInput.value.trim() || 'New Jalpaiguri (NJP)';
     const dateVal = departureDateInput.value || '2026-11-20';
     const classVal = travelClassSelect.value;
 

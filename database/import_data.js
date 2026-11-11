@@ -215,3 +215,4 @@ writeStream.end(() => {
   const stats = fs.statSync(outFile);
   console.log(`✓ database/schema.sql created successfully! File size: ${(stats.size / (1024 * 1024)).toFixed(2)} MB`);
 });
+

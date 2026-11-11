@@ -144,7 +144,7 @@ $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
 echo "✓ Schema tables created successfully!\n";
 
 // 3. Batch Insert Stations
-echo "Importing stations.json (8,990)... ";
+echo "Importing stations.json (699 West Bengal stations)... ";
 $stationsJson = json_decode(file_get_contents(__DIR__ . '/stations.json'), true);
 $stStmt = $pdo->prepare("INSERT INTO `stations` (code, name, state, zone, address, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
@@ -155,7 +155,7 @@ foreach ($stationsJson['features'] as $f) {
     $stStmt->execute([
         $p['code'] ?? null,
         $p['name'] ?? '',
-        $p['state'] ?? null,
+        $p['state'] ?? 'West Bengal',
         $p['zone'] ?? null,
         $p['address'] ?? null,
         $c[1] ?? null,
@@ -166,7 +166,7 @@ $pdo->commit();
 echo "Done!\n";
 
 // 4. Batch Insert Trains
-echo "Importing trains.json (5,208)... ";
+echo "Importing trains.json (830 West Bengal trains)... ";
 $trainsJson = json_decode(file_get_contents(__DIR__ . '/trains.json'), true);
 $trStmt = $pdo->prepare("INSERT INTO `trains` (number, name, type, from_station_code, from_station_name, to_station_code, to_station_name, departure, arrival, duration_h, duration_m, distance, zone, return_train, first_ac, second_ac, third_ac, chair_car, first_class, sleeper) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
@@ -199,8 +199,8 @@ foreach ($trainsJson['features'] as $f) {
 $pdo->commit();
 echo "Done!\n";
 
-// 5. Batch Insert Schedules (417,080)
-echo "Importing schedules.json (417,080)... ";
+// 5. Batch Insert Schedules (33,134)
+echo "Importing schedules.json (33,134 West Bengal schedules)... ";
 $schedulesJson = json_decode(file_get_contents(__DIR__ . '/schedules.json'), true);
 $scStmt = $pdo->prepare("INSERT INTO `schedules` (id, train_number, station_code, station_name, arrival, departure, day) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
@@ -217,7 +217,7 @@ foreach ($schedulesJson as $s) {
         (int)($s['day'] ?? 1)
     ]);
     $count++;
-    if ($count % 20000 === 0) {
+    if ($count % 5000 === 0) {
         $pdo->commit();
         $pdo->beginTransaction();
     }
@@ -227,3 +227,4 @@ echo "Done!\n";
 
 echo "✓ ALL DATASETS IMPORTED SUCCESSFULLY!\n";
 echo "✓ Bookings and Passengers tables are 100% empty and ready for real reservations.\n";
+

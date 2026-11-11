@@ -20,7 +20,7 @@ try {
     if ($query === '') {
         $stmt = $db->prepare(
             "SELECT code, name, state, zone FROM `stations`
-             WHERE code IN ('NDLS', 'MMCT', 'BCT', 'CSTM', 'SBC', 'MAS', 'MAO', 'HWH', 'BSB', 'JP', 'ADI', 'SC', 'PUNE', 'LKO', 'ASR', 'PNBE', 'BPL', 'CDG')
+             WHERE code IN ('HWH', 'SDAH', 'KOAA', 'SHM', 'KGP', 'NJP', 'ASN', 'DGR', 'BWN', 'MLDT', 'LGL', 'DGHA', 'RPH', 'BHP', 'BDC', 'BLGT', 'ADRA', 'PRR')
              ORDER BY name ASC LIMIT :limit"
         );
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
@@ -72,3 +72,4 @@ try {
 
     sendJsonResponse(false, [], 'Failed to fetch stations: ' . $e->getMessage(), 500);
 }
+

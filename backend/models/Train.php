@@ -111,7 +111,7 @@ class Train {
             }
         }
 
-        // 2. If DB returned no rows or DB is offline, search trains_index.json directly
+        // 2. If DB returned no rows or DB is offline, search trains_index.json and routes
         if (empty($merged)) {
             $trainsFile = __DIR__ . '/../../frontend/assets/trains_index.json';
             if (!file_exists($trainsFile)) {
@@ -120,18 +120,62 @@ class Train {
             if (file_exists($trainsFile)) {
                 $raw = json_decode(file_get_contents($trainsFile), true);
                 $trainList = $raw['features'] ?? $raw;
+                $trainsByNum = [];
                 foreach ($trainList as $f) {
                     $p = $f['properties'] ?? $f;
-                    $fCode = strtoupper($p['from_station_code'] ?? '');
-                    $fName = strtoupper($p['from_station_name'] ?? '');
-                    $tCode = strtoupper($p['to_station_code'] ?? '');
-                    $tName = strtoupper($p['to_station_name'] ?? '');
+                    $num = (string)($p['number'] ?? '');
+                    if ($num !== '') {
+                        $p['from_station_code'] = $p['from_station_code'] ?? $p['from_code'] ?? '';
+                        $p['from_station_name'] = $p['from_station_name'] ?? $p['from_name'] ?? '';
+                        $p['to_station_code'] = $p['to_station_code'] ?? $p['to_code'] ?? '';
+                        $p['to_station_name'] = $p['to_station_name'] ?? $p['to_name'] ?? '';
+                        $trainsByNum[$num] = $p;
+                    }
+                }
+
+                // Check routes index for intermediate & direct stop connections
+                $routesFile = __DIR__ . '/../../frontend/assets/wb_routes.json';
+                $seen = [];
+                if (file_exists($routesFile)) {
+                    $routes = json_decode(file_get_contents($routesFile), true);
+                    foreach ($routes as $tnum => $stops) {
+                        $fromStop = null;
+                        $toStop = null;
+                        foreach ($stops as $idx => $s) {
+                            $code = strtoupper($s['code'] ?? '');
+                            $name = strtoupper($s['name'] ?? '');
+                            if ($fromStop === null && ($code === $cleanFrom || str_contains($name, $cleanFrom))) {
+                                $fromStop = array_merge($s, ['idx' => $idx]);
+                            } elseif ($fromStop !== null && ($code === $cleanTo || str_contains($name, $cleanTo))) {
+                                $toStop = array_merge($s, ['idx' => $idx]);
+                                break;
+                            }
+                        }
+
+                        if ($fromStop !== null && $toStop !== null && isset($trainsByNum[$tnum])) {
+                            $t = $trainsByNum[$tnum];
+                            if (!empty($fromStop['dep'])) $t['departure'] = $fromStop['dep'];
+                            if (!empty($toStop['arr'])) $t['arrival'] = $toStop['arr'];
+                            $merged[] = $t;
+                            $seen[$tnum] = true;
+                        }
+                    }
+                }
+
+                // Direct from/to origin/destination terminal check
+                foreach ($trainsByNum as $num => $p) {
+                    if (isset($seen[$num])) continue;
+                    $fCode = strtoupper($p['from_station_code']);
+                    $fName = strtoupper($p['from_station_name']);
+                    $tCode = strtoupper($p['to_station_code']);
+                    $tName = strtoupper($p['to_station_name']);
 
                     $matchFrom = ($fCode === $cleanFrom || str_contains($fName, $cleanFrom));
                     $matchTo = ($tCode === $cleanTo || str_contains($tName, $cleanTo));
 
                     if ($matchFrom && $matchTo) {
                         $merged[] = $p;
+                        $seen[$num] = true;
                     }
                 }
             }

@@ -81,14 +81,14 @@
           <!-- Quick Destination Selection Chips -->
           <div class="quick-destinations-bar" role="toolbar" aria-label="Popular destinations">
             <span class="quick-dest-label">Quick select:</span>
-            <button type="button" class="quick-dest-chip" data-station="Mumbai Central (MMCT)">Mumbai</button>
-            <button type="button" class="quick-dest-chip" data-station="Madgaon (Goa) (MAO)">Goa</button>
-            <button type="button" class="quick-dest-chip" data-station="Bengaluru City (SBC)">Bengaluru</button>
-            <button type="button" class="quick-dest-chip" data-station="Chennai Central (MAS)">Chennai</button>
-            <button type="button" class="quick-dest-chip" data-station="Howrah (Kolkata) (HWH)">Kolkata</button>
-            <button type="button" class="quick-dest-chip" data-station="Varanasi Jn (BSB)">Varanasi</button>
-            <button type="button" class="quick-dest-chip" data-station="Jaipur Jn (JP)">Jaipur</button>
-            <button type="button" class="quick-dest-chip" data-station="Ahmedabad Jn (ADI)">Ahmedabad</button>
+            <button type="button" class="quick-dest-chip" data-station="New Jalpaiguri (NJP)">NJP / Siliguri</button>
+            <button type="button" class="quick-dest-chip" data-station="Asansol Jn (ASN)">Asansol</button>
+            <button type="button" class="quick-dest-chip" data-station="Digha (DGHA)">Digha</button>
+            <button type="button" class="quick-dest-chip" data-station="Kharagpur Jn (KGP)">Kharagpur</button>
+            <button type="button" class="quick-dest-chip" data-station="Malda Town (MLDT)">Malda Town</button>
+            <button type="button" class="quick-dest-chip" data-station="Lalgola (LGL)">Lalgola</button>
+            <button type="button" class="quick-dest-chip" data-station="Darjeeling (DJ)">Darjeeling</button>
+            <button type="button" class="quick-dest-chip" data-station="Barddhaman Jn (BWN)">Barddhaman</button>
           </div>
         </div>
 
@@ -97,7 +97,7 @@
           <div class="form-group">
             <label for="from-station" class="form-label">From</label>
             <div class="input-container">
-              <input type="text" id="from-station" class="form-input" value="New Delhi (NDLS)" autocomplete="off" required placeholder="Origin station">
+              <input type="text" id="from-station" class="form-input" value="Howrah Jn (HWH)" autocomplete="off" required placeholder="Origin station">
               <button type="button" id="btn-clear-from" class="btn-clear-input visible" title="Clear origin station" aria-label="Clear origin station">✕</button>
               <div id="from-dropdown" class="autocomplete-dropdown" role="listbox"></div>
             </div>
@@ -112,7 +112,7 @@
           <div class="form-group">
             <label for="to-station" class="form-label">To</label>
             <div class="input-container">
-              <input type="text" id="to-station" class="form-input" value="Mumbai Central (MMCT)" autocomplete="off" required placeholder="Destination station">
+              <input type="text" id="to-station" class="form-input" value="New Jalpaiguri (NJP)" autocomplete="off" required placeholder="Destination station">
               <button type="button" id="btn-clear-to" class="btn-clear-input visible" title="Clear destination station" aria-label="Clear destination station">✕</button>
               <div id="to-dropdown" class="autocomplete-dropdown" role="listbox"></div>
             </div>
@@ -262,47 +262,47 @@
 
       <div class="routes-grid">
         <!-- Route 01 -->
-        <article class="route-card" data-from="New Delhi (NDLS)" data-to="Mumbai Central (MMCT)" tabindex="0" role="button" aria-label="Book New Delhi to Mumbai">
+        <article class="route-card" data-from="Howrah Jn (HWH)" data-to="New Jalpaiguri (NJP)" tabindex="0" role="button" aria-label="Book Howrah to New Jalpaiguri">
           <div class="route-card-top">
             <span class="route-number">01</span>
             <div>
-              <h3 class="route-destination">New Delhi → Mumbai</h3>
-              <p class="route-tagline">A night on the rails. A new city by morning.</p>
+              <h3 class="route-destination">Howrah → New Jalpaiguri</h3>
+              <p class="route-tagline">Gateway to the hills of North Bengal.</p>
             </div>
           </div>
           <div class="route-card-footer">
-            <span class="route-fare">From <strong>₹1,895</strong></span>
-            <span class="route-duration">16h 35m</span>
+            <span class="route-fare">From <strong>₹980</strong></span>
+            <span class="route-duration">8h 15m</span>
           </div>
         </article>
 
         <!-- Route 02 -->
-        <article class="route-card" data-from="Bengaluru City (SBC)" data-to="Chennai Central (MAS)" tabindex="0" role="button" aria-label="Book Bengaluru to Chennai">
+        <article class="route-card" data-from="Howrah Jn (HWH)" data-to="Asansol Jn (ASN)" tabindex="0" role="button" aria-label="Book Howrah to Asansol">
           <div class="route-card-top">
             <span class="route-number">02</span>
             <div>
-              <h3 class="route-destination">Bengaluru → Chennai</h3>
-              <p class="route-tagline">The coast is closer than you think.</p>
+              <h3 class="route-destination">Howrah → Asansol</h3>
+              <p class="route-tagline">Fast intercity travel across the industrial corridor.</p>
             </div>
           </div>
           <div class="route-card-footer">
-            <span class="route-fare">From <strong>₹620</strong></span>
-            <span class="route-duration">4h 20m</span>
+            <span class="route-fare">From <strong>₹385</strong></span>
+            <span class="route-duration">3h 10m</span>
           </div>
         </article>
 
         <!-- Route 03 -->
-        <article class="route-card" data-from="Mumbai Central (MMCT)" data-to="Madgaon (Goa) (MAO)" tabindex="0" role="button" aria-label="Book Mumbai to Goa">
+        <article class="route-card" data-from="Kolkata Sealdah (SDAH)" data-to="Lalgola (LGL)" tabindex="0" role="button" aria-label="Book Sealdah to Lalgola">
           <div class="route-card-top">
             <span class="route-number">03</span>
             <div>
-              <h3 class="route-destination">Mumbai → Goa</h3>
-              <p class="route-tagline">Trade the city for a slower kind of day.</p>
+              <h3 class="route-destination">Sealdah → Lalgola</h3>
+              <p class="route-tagline">Historic Murshidabad along the Bhagirathi.</p>
             </div>
           </div>
           <div class="route-card-footer">
-            <span class="route-fare">From <strong>₹890</strong></span>
-            <span class="route-duration">8h 45m</span>
+            <span class="route-fare">From <strong>₹275</strong></span>
+            <span class="route-duration">4h 25m</span>
           </div>
         </article>
       </div>
