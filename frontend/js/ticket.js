@@ -128,11 +128,15 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       } else {
+        pnrResultSection.style.display = 'none';
+        ticketSection.style.display = 'none';
         pnrHelper.className = 'pnr-helper-text error';
-        pnrHelper.textContent = '! No booking found for this PNR. Check number and try again.';
+        pnrHelper.textContent = res.message || '! No booking found for this PNR. Check number and try again.';
       }
     } catch (err) {
       console.error('PNR check failed:', err);
+      pnrResultSection.style.display = 'none';
+      ticketSection.style.display = 'none';
       pnrHelper.className = 'pnr-helper-text error';
       pnrHelper.textContent = '! An error occurred while checking PNR. Please retry.';
     } finally {
@@ -220,9 +224,10 @@ document.addEventListener('DOMContentLoaded', () => {
     pnrInput.value = paramPNR;
     executePNRLookup(paramPNR, hasTicketHash);
   } else {
-    // Default load demo PNR from Figma: 4827361950
-    pnrInput.value = '4827361950';
-    executePNRLookup('4827361950', hasTicketHash);
+    // Zero demo data: leave input clean and hide ticket views until user queries a real PNR
+    pnrInput.value = '';
+    if (pnrResultSection) pnrResultSection.style.display = 'none';
+    if (ticketSection) ticketSection.style.display = 'none';
   }
 });
 

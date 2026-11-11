@@ -331,45 +331,36 @@ const RailGoAPI = (() => {
     }
   }
 
-  // Default seed booking for Figma PNR: 4827361950
-  const DEFAULT_PNR_BOOKING = {
-    pnr: "4827361950",
-    train_id: "12952",
-    train_name: "Mumbai Rajdhani",
-    train_number: "12952",
-    class_code: "3A",
-    class_name: "3A · AC 3 tier",
-    from_name: "New Delhi",
-    to_name: "Mumbai Central",
-    departure_time: "16:55",
-    departure_date: "20 Nov 2026",
-    arrival_time: "08:35",
-    arrival_date: "21 Nov 2026",
-    duration: "15h 40m",
-    coach: "B4",
-    status: "Confirmed",
-    status_label: "✓ Confirmed",
-    booking_date: "10 Nov 2026 · 12:42",
-    passengers: [
-      { name: "Aanya Sharma", age: 28, gender: "F", berth_pref: "Lower", coach: "B4", seat: "21", status: "✓ Confirmed" },
-      { name: "Rohan Mehta", age: 29, gender: "M", berth_pref: "Upper", coach: "B4", seat: "22", status: "✓ Confirmed" },
-      { name: "Meera Iyer", age: 30, gender: "F", berth_pref: "Lower", coach: "B4", seat: "23", status: "✓ Confirmed" },
-      { name: "Arjun Rao", age: 31, gender: "M", berth_pref: "Upper", coach: "B4", seat: "24", status: "✓ Confirmed" },
-      { name: "Kavya Nair", age: 32, gender: "F", berth_pref: "Lower", coach: "B4", seat: "25", status: "✓ Confirmed" },
-      { name: "Dev Patel", age: 33, gender: "M", berth_pref: "Upper", coach: "B4", seat: "26", status: "✓ Confirmed" }
-    ]
-  };
-
-  if (!getBookingsStore()["4827361950"]) {
-    saveBooking("4827361950", DEFAULT_PNR_BOOKING);
-  }
+  // Clear any legacy demo bookings from storage
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      const raw = sessionStorage.getItem('railgo_bookings');
+      if (raw) {
+        const store = JSON.parse(raw);
+        if (store['4827361950']) {
+          delete store['4827361950'];
+          sessionStorage.setItem('railgo_bookings', JSON.stringify(store));
+        }
+      }
+    }
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem('railgo_bookings');
+      if (raw) {
+        const store = JSON.parse(raw);
+        if (store['4827361950']) {
+          delete store['4827361950'];
+          localStorage.setItem('railgo_bookings', JSON.stringify(store));
+        }
+      }
+    }
+  } catch (e) {}
 
   /**
    * Search Trains API
    * GET /api/search_trains.php?from=&to=&date=&class=
    */
   async function searchTrains(params = {}) {
-    const { from = 'New Delhi (NDLS)', to = 'Mumbai Central (MMCT)', date = '20 Nov 2026', travelClass = 'all' } = params;
+    const { from = 'Howrah Jn (HWH)', to = 'New Jalpaiguri (NJP)', date = '20 Nov 2026', travelClass = 'all' } = params;
 
     // 1. Attempt Real PHP Backend API
     try {
@@ -539,16 +530,24 @@ const RailGoAPI = (() => {
             pnr: cleanPNR,
             data: json.data
           };
+        } else {
+          return {
+            status: 'error',
+            message: json.message || 'No booking found for this PNR.'
+          };
         }
+      } else if (res.status === 404) {
+        return {
+          status: 'error',
+          message: `No booking found for PNR ${cleanPNR}. Please check the number and try again.`
+        };
       }
     } catch (err) {
-      console.info('Backend check PNR unavailable, using offline store:', err.message);
+      console.info('Backend check PNR unavailable, checking local store:', err.message);
     }
 
-    await new Promise(r => setTimeout(r, 450));
-
+    // Check local store for bookings placed on this site
     const store = getBookingsStore();
-
     if (store[cleanPNR]) {
       return {
         status: 'success',
@@ -557,40 +556,10 @@ const RailGoAPI = (() => {
       };
     }
 
-    if (/^\d{10}$/.test(cleanPNR)) {
-      const generated = {
-        pnr: cleanPNR,
-        train_id: "12952",
-        train_name: "Mumbai Rajdhani",
-        train_number: "12952",
-        class_code: "3A",
-        class_name: "3A · AC 3 tier",
-        from_name: "New Delhi",
-        to_name: "Mumbai Central",
-        departure_time: "16:55",
-        departure_date: "20 Nov 2026",
-        arrival_time: "08:35",
-        arrival_date: "21 Nov 2026",
-        duration: "15h 40m",
-        coach: "B4",
-        status: "Confirmed",
-        status_label: "✓ Confirmed",
-        booking_date: "10 Nov 2026 · 12:42",
-        passengers: [
-          { name: "Passenger 1", age: 30, gender: "M", berth_pref: "Lower", coach: "B4", seat: "21", status: "✓ Confirmed" }
-        ]
-      };
-      saveBooking(cleanPNR, generated);
-      return {
-        status: 'success',
-        pnr: cleanPNR,
-        data: generated
-      };
-    }
-
+    // Do NOT generate fake demo bookings — report not found
     return {
       status: 'error',
-      message: 'Invalid PNR number or record not found.'
+      message: `No booking found for PNR ${cleanPNR}. Check the number and try again.`
     };
   }
 

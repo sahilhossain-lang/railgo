@@ -63,7 +63,7 @@
               <div class="pnr-input-group">
                 <label for="pnr-input" class="form-label">10-digit PNR</label>
                 <input type="text" id="pnr-input" class="form-input pnr-mono-input"
-                       value="4827361950" maxlength="10" placeholder="e.g. 4827361950"
+                       value="" maxlength="10" placeholder="Enter 10-digit PNR"
                        autocomplete="off" required aria-describedby="pnr-helper-message">
               </div>
               <button type="submit" class="btn btn-primary" style="height: 52px; padding: 0 28px;">
@@ -79,7 +79,7 @@
     </section>
 
     <!-- PNR Status & Timeline Section -->
-    <section id="pnr-result-section" class="container pnr-result-section" aria-label="PNR Status and Journey Timeline">
+    <section id="pnr-result-section" class="container pnr-result-section" style="display: none;" aria-label="PNR Status and Journey Timeline">
       <div class="pnr-result-grid">
         <!-- Journey Timeline Card -->
         <div class="timeline-card">
@@ -136,7 +136,7 @@
     </section>
 
     <!-- Screen 4: E-Ticket Boarding Pass with Pure CSS 3D Flip (Figma 4:12137, 4:23736) -->
-    <section id="ticket" class="container ticket-section" aria-labelledby="ticket-title">
+    <section id="ticket" class="container ticket-section" style="display: none;" aria-labelledby="ticket-title">
       <div class="ticket-header-group">
         <span class="ticket-kicker">YOUR JOURNEY, ALL SET</span>
         <h2 id="ticket-title" class="ticket-heading">Your ticket to somewhere new.</h2>
@@ -226,7 +226,7 @@
             <div class="ticket-identity-footer">
               <div class="pnr-display-box">
                 <span class="pnr-tag-label">YOUR PNR</span>
-                <span id="ticket-pnr-display" class="pnr-tag-value">4827361950</span>
+                <span id="ticket-pnr-display" class="pnr-tag-value">—</span>
                 <p class="ticket-id-reminder">Carry a valid photo ID. Arrive 30 minutes before departure.</p>
                 <button type="button" id="btn-flip-to-back" class="btn-flip-ticket">
                   <span>↻</span>
@@ -279,7 +279,7 @@
             <div class="ticket-identity-footer">
               <div class="pnr-display-box">
                 <span class="pnr-tag-label">PNR</span>
-                <span id="ticket-back-pnr" class="pnr-tag-value" style="font-size: 1.5rem;">4827361950</span>
+                <span id="ticket-back-pnr" class="pnr-tag-value" style="font-size: 1.5rem;">—</span>
                 <button type="button" id="btn-flip-to-front" class="btn-flip-ticket">
                   <span>↻</span>
                   <span>Return to ticket</span>
