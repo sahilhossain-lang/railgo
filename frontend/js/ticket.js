@@ -68,6 +68,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const ticketPnrDisplay = document.getElementById('ticket-pnr-display');
   const ticketBackPnr = document.getElementById('ticket-back-pnr');
 
+  // Cancel Ticket Elements
+  const cancelModal = document.getElementById('cancel-modal');
+  const btnCloseCancelModal = document.getElementById('btn-close-cancel-modal');
+  const btnAbortCancel = document.getElementById('btn-abort-cancel');
+  const btnConfirmCancel = document.getElementById('btn-confirm-cancel');
+  const cancelModalPnr = document.getElementById('cancel-modal-pnr');
+  const cancelModalStatus = document.getElementById('cancel-modal-status');
+  const btnCancelTicket = document.getElementById('btn-cancel-ticket');
+  const btnCancelTicketOverview = document.getElementById('btn-cancel-ticket-overview');
+  const tlStatusPill = document.getElementById('tl-status-pill');
+  const ticketStatusPill = document.getElementById('ticket-status-pill');
+  const ticketBackStatusPill = document.getElementById('ticket-back-status-pill');
+  let currentTicketData = null;
+
   // Restrict input to digits only & max 10 chars
   if (pnrInput) {
     pnrInput.addEventListener('input', (e) => {
@@ -113,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await RailGoAPI.checkPNR(pnr);
 
       if (res.status === 'success' && res.data) {
+        currentTicketData = res.data;
         renderPNRStatus(res.data);
         renderTicket(res.data);
 
@@ -160,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderPNRStatus(data) {
+    const isCancelled = (data.status === 'Cancelled' || data.booking_status === 'Cancelled');
     const realArrDate = (data.arrival_date && data.arrival_date !== data.departure_date)
       ? data.arrival_date
       : (RailGoAPI.calculateArrivalDate
@@ -174,19 +190,41 @@ document.addEventListener('DOMContentLoaded', () => {
     tlStepArrStation.textContent = `Arrives · ${data.to_name}`;
     tlStepArrTime.textContent = `${realArrDate} · ${data.arrival_time}`;
 
+    if (tlStatusPill) {
+      tlStatusPill.className = isCancelled ? 'status-pill cancelled' : 'status-pill confirmed';
+      tlStatusPill.textContent = isCancelled ? '✕ Cancelled' : '✓ Confirmed';
+    }
+
+    if (btnCancelTicketOverview) {
+      if (isCancelled) {
+        btnCancelTicketOverview.disabled = true;
+        btnCancelTicketOverview.textContent = '✕ Ticket Cancelled';
+      } else {
+        btnCancelTicketOverview.disabled = false;
+        btnCancelTicketOverview.textContent = '✕ Cancel ticket';
+      }
+    }
+
     // Render passengers
-    pnrPassengerList.innerHTML = (data.passengers || []).map(p => `
+    pnrPassengerList.innerHTML = (data.passengers || []).map(p => {
+      const pStatus = p.status || (isCancelled ? 'Cancelled' : 'Confirmed');
+      const pIsCancelled = (isCancelled || String(pStatus).toLowerCase() === 'cancelled');
+      const pillClass = pIsCancelled ? 'status-pill cancelled' : 'status-pill confirmed';
+      const pillText = pIsCancelled ? '✕ Cancelled' : '✓ Confirmed';
+      return `
       <div class="status-passenger-item">
         <div>
           <div class="status-p-name">${RailGoAPI.escapeHTML(p.name)}</div>
-          <span class="status-pill confirmed">${RailGoAPI.escapeHTML(p.status || '✓ Confirmed')}</span>
+          <span class="${pillClass}">${pillText}</span>
         </div>
         <div class="status-p-berth">Coach ${RailGoAPI.escapeHTML(p.coach || data.coach)} / ${RailGoAPI.escapeHTML(p.seat)} / ${RailGoAPI.escapeHTML(p.berth_pref || 'Berth')}</div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
   function renderTicket(data) {
+    const isCancelled = (data.status === 'Cancelled' || data.booking_status === 'Cancelled');
     const realArrDate = (data.arrival_date && data.arrival_date !== data.departure_date)
       ? data.arrival_date
       : (RailGoAPI.calculateArrivalDate
@@ -206,6 +244,25 @@ document.addEventListener('DOMContentLoaded', () => {
     ticketArrDate.textContent = realArrDate;
     ticketPnrDisplay.textContent = data.pnr;
     ticketBackPnr.textContent = data.pnr;
+
+    if (ticketStatusPill) {
+      ticketStatusPill.className = isCancelled ? 'status-pill cancelled' : 'status-pill confirmed';
+      ticketStatusPill.textContent = isCancelled ? '✕ Cancelled' : '✓ Confirmed';
+    }
+    if (ticketBackStatusPill) {
+      ticketBackStatusPill.className = isCancelled ? 'status-pill cancelled' : 'status-pill confirmed';
+      ticketBackStatusPill.textContent = isCancelled ? '✕ Cancelled' : '✓ Confirmed';
+    }
+
+    if (btnCancelTicket) {
+      if (isCancelled) {
+        btnCancelTicket.disabled = true;
+        btnCancelTicket.innerHTML = '<span aria-hidden="true">✕</span> <span>Ticket Cancelled</span>';
+      } else {
+        btnCancelTicket.disabled = false;
+        btnCancelTicket.innerHTML = '<span aria-hidden="true">✕</span> <span>Cancel ticket</span>';
+      }
+    }
 
     // Render manifest table
     ticketManifestList.innerHTML = (data.passengers || []).map((p, idx) => {
@@ -240,6 +297,92 @@ document.addEventListener('DOMContentLoaded', () => {
   if (printTicketBtn) {
     printTicketBtn.addEventListener('click', () => {
       window.print();
+    });
+  }
+
+  // 5b. Cancel Ticket Modal & Confirmation Flow
+  function openCancelModal() {
+    if (!currentTicketData || !currentTicketData.pnr) return;
+    if (cancelModalPnr) cancelModalPnr.textContent = currentTicketData.pnr;
+    if (cancelModalStatus) {
+      cancelModalStatus.style.display = 'none';
+      cancelModalStatus.textContent = '';
+      cancelModalStatus.className = 'cancel-modal-status';
+    }
+    if (btnConfirmCancel) {
+      btnConfirmCancel.disabled = false;
+      btnConfirmCancel.textContent = 'Yes, Cancel Ticket';
+    }
+    if (cancelModal && typeof cancelModal.showModal === 'function') {
+      cancelModal.showModal();
+    }
+  }
+
+  function closeCancelModal() {
+    if (cancelModal && typeof cancelModal.close === 'function') {
+      cancelModal.close();
+    }
+  }
+
+  if (btnCancelTicket) {
+    btnCancelTicket.addEventListener('click', openCancelModal);
+  }
+  if (btnCancelTicketOverview) {
+    btnCancelTicketOverview.addEventListener('click', openCancelModal);
+  }
+  if (btnCloseCancelModal) {
+    btnCloseCancelModal.addEventListener('click', closeCancelModal);
+  }
+  if (btnAbortCancel) {
+    btnAbortCancel.addEventListener('click', closeCancelModal);
+  }
+
+  if (btnConfirmCancel) {
+    btnConfirmCancel.addEventListener('click', async () => {
+      if (!currentTicketData || !currentTicketData.pnr) return;
+      const pnr = currentTicketData.pnr;
+
+      try {
+        btnConfirmCancel.disabled = true;
+        btnConfirmCancel.textContent = 'Cancelling...';
+        if (cancelModalStatus) {
+          cancelModalStatus.style.display = 'none';
+        }
+
+        const res = await RailGoAPI.cancelTicket(pnr);
+
+        if (res && (res.status === 'success' || res.success)) {
+          if (cancelModalStatus) {
+            cancelModalStatus.className = 'cancel-modal-status success';
+            cancelModalStatus.textContent = res.message || 'Ticket cancelled successfully.';
+            cancelModalStatus.style.display = 'block';
+          }
+
+          setTimeout(async () => {
+            closeCancelModal();
+            // Re-fetch/re-render the ticket & refresh my bookings
+            await executePNRLookup(pnr, false);
+            await loadMyBookings(pnr);
+          }, 1200);
+        } else {
+          const errMsg = (res && (res.error || res.message)) || 'Failed to cancel ticket. Please try again.';
+          if (cancelModalStatus) {
+            cancelModalStatus.className = 'cancel-modal-status error';
+            cancelModalStatus.textContent = errMsg;
+            cancelModalStatus.style.display = 'block';
+          }
+          btnConfirmCancel.disabled = false;
+          btnConfirmCancel.textContent = 'Yes, Cancel Ticket';
+        }
+      } catch (err) {
+        if (cancelModalStatus) {
+          cancelModalStatus.className = 'cancel-modal-status error';
+          cancelModalStatus.textContent = err.message || 'Network error occurred.';
+          cancelModalStatus.style.display = 'block';
+        }
+        btnConfirmCancel.disabled = false;
+        btnConfirmCancel.textContent = 'Yes, Cancel Ticket';
+      }
     });
   }
 
@@ -281,11 +424,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     myBookingsChips.innerHTML = bookings.map(b => {
       const isActive = (b.pnr === activePnr);
+      const isCancelled = (b.booking_status === 'Cancelled' || b.status === 'Cancelled');
+      const statusLabel = isCancelled ? '✕ Cancelled' : (b.status_label || '✓ Confirmed');
+      const statusClass = isCancelled ? 'chip-status cancelled' : 'chip-status';
       return `
-        <button type="button" class="my-booking-chip ${isActive ? 'active' : ''}" data-pnr="${RailGoAPI.escapeHTML(b.pnr)}">
+        <button type="button" class="my-booking-chip ${isActive ? 'active' : ''} ${isCancelled ? 'booking-cancelled' : ''}" data-pnr="${RailGoAPI.escapeHTML(b.pnr)}">
           <div class="chip-top">
             <span class="chip-train">${RailGoAPI.escapeHTML(b.train_number)} · ${RailGoAPI.escapeHTML(b.train_name)}</span>
-            <span class="chip-status">${RailGoAPI.escapeHTML(b.status_label || '✓ Confirmed')}</span>
+            <span class="${statusClass}">${RailGoAPI.escapeHTML(statusLabel)}</span>
           </div>
           <div class="chip-route">${RailGoAPI.escapeHTML(b.from_name)} → ${RailGoAPI.escapeHTML(b.to_name)}</div>
           <div class="chip-meta">

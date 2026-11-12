@@ -2606,3 +2606,195 @@
   line-height: 1.5;
   margin-bottom: var(--space-4, 20px);
 }
+
+/* --------------------------------------------------------------------------
+   19. CANCEL TICKET STYLES & MODAL
+   -------------------------------------------------------------------------- */
+
+.status-pill.cancelled {
+  background-color: var(--color-crimson-50, #fef2f2);
+  color: var(--color-crimson-700, #b91c1c);
+  border: 1px solid var(--color-crimson-200, #fecaca);
+}
+
+.passenger-status-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-4, 16px);
+}
+
+@media (min-width: 480px) {
+  .passenger-status-actions {
+    flex-direction: row;
+  }
+}
+
+.btn-cancel-ticket {
+  background-color: transparent;
+  color: var(--color-crimson-600, #dc2626);
+  border: 1px solid var(--color-crimson-200, #fecaca);
+  padding: 10px 18px;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.btn-cancel-ticket:hover:not(:disabled) {
+  background-color: var(--color-crimson-50, #fef2f2);
+  border-color: var(--color-crimson-600, #dc2626);
+  color: var(--color-crimson-700, #b91c1c);
+}
+
+.btn-cancel-ticket:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-color: var(--color-slate-200, #e2e8f0);
+  color: var(--color-slate-400, #94a3b8);
+  background-color: var(--color-slate-50, #f8fafc);
+}
+
+.btn-danger-action {
+  background-color: var(--color-crimson-600, #dc2626);
+  color: #ffffff;
+  border: 1px solid var(--color-crimson-600, #dc2626);
+  padding: 10px 20px;
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-danger-action:hover:not(:disabled) {
+  background-color: var(--color-crimson-700, #b91c1c);
+}
+
+.btn-danger-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.chip-status.cancelled {
+  color: var(--color-crimson-700, #b91c1c);
+  background: rgba(220, 38, 38, 0.12);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.my-booking-chip.booking-cancelled {
+  opacity: 0.85;
+  border-color: rgba(220, 38, 38, 0.25);
+  background: #fff8f8;
+}
+
+.my-booking-chip.booking-cancelled.active {
+  border-color: var(--color-crimson-600, #dc2626);
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
+
+/* Cancel Dialog (<dialog id="cancel-modal">) */
+.cancel-dialog {
+  width: 90vw;
+  max-width: 480px;
+  margin: auto;
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-2xl, 20px);
+  background: var(--color-white, #ffffff);
+  box-shadow: 0 20px 40px rgba(15, 27, 61, 0.25);
+  padding: var(--space-6, 24px);
+  color: var(--color-navy-900, #0f1b3d);
+}
+
+.cancel-dialog::backdrop {
+  background: rgba(15, 27, 61, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.cancel-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4, 16px);
+}
+
+.cancel-dialog-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-navy-900, #0f1b3d);
+}
+
+.cancel-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+}
+
+.cancel-dialog-warning {
+  display: flex;
+  gap: var(--space-3, 12px);
+  background-color: var(--color-crimson-50, #fef2f2);
+  border: 1px solid var(--color-crimson-100, #fee2e2);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--space-4, 16px);
+  align-items: flex-start;
+}
+
+.warning-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.warning-title {
+  font-weight: 700;
+  color: var(--color-crimson-800, #991b1b);
+  margin-bottom: 4px;
+}
+
+.warning-text {
+  font-size: 0.9rem;
+  color: var(--color-slate-600, #475569);
+  line-height: 1.4;
+}
+
+.pnr-mono-highlight {
+  font-family: monospace;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  color: var(--color-crimson-900, #7f1d1d);
+  background: #ffe4e6;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.cancel-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-2, 8px);
+}
+
+.cancel-modal-status {
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.cancel-modal-status.error {
+  background-color: var(--color-crimson-50, #fef2f2);
+  color: var(--color-crimson-700, #b91c1c);
+  border: 1px solid var(--color-crimson-200, #fecaca);
+}
+
+.cancel-modal-status.success {
+  background-color: var(--color-teal-50, #f0fdf4);
+  color: var(--color-teal-700, #15803d);
+  border: 1px solid var(--color-teal-200, #bbf7d0);
+}

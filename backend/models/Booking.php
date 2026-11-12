@@ -410,6 +410,24 @@ class Booking {
             }
         }
 
+        // Offline storage fallback
+        $file = __DIR__ . '/../../database/real_bookings.json';
+        if (file_exists($file)) {
+            $store = json_decode(file_get_contents($file), true) ?: [];
+            if (isset($store[$cleanPnr])) {
+                if (($store[$cleanPnr]['status'] ?? '') === 'Cancelled') {
+                    throw new Exception("This booking is already cancelled.");
+                }
+                $store[$cleanPnr]['status'] = 'Cancelled';
+                $store[$cleanPnr]['booking_status'] = 'Cancelled';
+                $store[$cleanPnr]['status_label'] = 'Cancelled';
+                foreach ($store[$cleanPnr]['passengers'] ?? [] as &$p) {
+                    $p['status'] = 'Cancelled';
+                }
+                file_put_contents($file, json_encode($store, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            }
+        }
+
         return [
             'pnr'     => $cleanPnr,
             'status'  => 'Cancelled',
@@ -487,7 +505,7 @@ class Booking {
                         'class_code'     => $item['class_code'],
                         'total_fare'     => (float)($item['total_fare'] ?? 0),
                         'status'         => $item['status'] ?? 'Confirmed',
-                        'status_label'   => '✓ Confirmed',
+                        'status_label'   => (($item['status'] ?? 'Confirmed') === 'Confirmed') ? '✓ Confirmed' : ($item['status'] ?? 'Cancelled'),
                         'booking_date'   => date('d M Y · H:i', strtotime($item['created_at'] ?? 'now')),
                         'passengers'     => $item['passengers'] ?? []
                     ];

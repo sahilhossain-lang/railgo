@@ -59,6 +59,7 @@ function sendJsonResponse(bool $success, mixed $data = null, string $message = '
     http_response_code($statusCode);
 
     echo json_encode([
+        'success' => $success,
         'status'  => $success ? 'success' : 'error',
         'message' => $message,
         'data'    => $data,

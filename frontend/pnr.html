@@ -116,7 +116,7 @@
               <h2 id="tl-train-title" class="timeline-train-title">Mumbai Rajdhani</h2>
               <span id="tl-train-meta" class="timeline-train-meta">12952 · 3A · AC 3 tier</span>
             </div>
-            <span class="status-pill confirmed">✓ Confirmed</span>
+            <span id="tl-status-pill" class="status-pill confirmed">✓ Confirmed</span>
           </div>
 
           <!-- Vertical Timeline Track -->
@@ -156,9 +156,14 @@
             <!-- Populated dynamically -->
           </div>
 
-          <a href="#ticket" class="btn btn-secondary" style="width: 100%;">
-            View boarding pass e-ticket ↓
-          </a>
+          <div class="passenger-status-actions">
+            <a href="#ticket" class="btn btn-secondary" style="flex: 1;">
+              View boarding pass e-ticket ↓
+            </a>
+            <button type="button" id="btn-cancel-ticket-overview" class="btn btn-cancel-ticket" style="flex: 1;">
+              ✕ Cancel ticket
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -183,7 +188,7 @@
                 <span class="brand-arrow" aria-hidden="true">↗</span>
                 <span>RailGo</span>
               </div>
-              <span class="status-pill confirmed">✓ Confirmed</span>
+              <span id="ticket-status-pill" class="status-pill confirmed">✓ Confirmed</span>
             </div>
 
             <!-- Journey Summary -->
@@ -277,7 +282,7 @@
                 <span class="brand-arrow" aria-hidden="true">↗</span>
                 <span>RailGo</span>
               </div>
-              <span class="status-pill confirmed">✓ Confirmed</span>
+              <span id="ticket-back-status-pill" class="status-pill confirmed">✓ Confirmed</span>
             </div>
 
             <!-- Terms Body -->
@@ -329,12 +334,38 @@
           <span aria-hidden="true">🖨</span>
           <span>Print / Save as PDF</span>
         </button>
+        <button type="button" id="btn-cancel-ticket" class="btn btn-cancel-ticket">
+          <span aria-hidden="true">✕</span>
+          <span>Cancel ticket</span>
+        </button>
         <a href="index.html" class="btn btn-secondary">
           Book another train
         </a>
       </div>
     </section>
   </main>
+
+  <!-- Cancel Ticket Confirmation Modal Dialog -->
+  <dialog id="cancel-modal" class="cancel-dialog" aria-labelledby="cancel-modal-title">
+    <div class="cancel-dialog-header">
+      <h2 id="cancel-modal-title" class="cancel-dialog-title">Cancel Ticket</h2>
+      <button type="button" id="btn-close-cancel-modal" class="btn-close-modal" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="cancel-dialog-content">
+      <div class="cancel-dialog-warning">
+        <span class="warning-icon" aria-hidden="true">⚠️</span>
+        <div>
+          <p class="warning-title">Are you sure you want to cancel this booking?</p>
+          <p class="warning-text">This will cancel all passenger reservations associated with PNR <strong id="cancel-modal-pnr" class="pnr-mono-highlight"></strong>. This action cannot be undone.</p>
+        </div>
+      </div>
+      <div id="cancel-modal-status" class="cancel-modal-status" style="display: none;"></div>
+      <div class="cancel-dialog-actions">
+        <button type="button" id="btn-abort-cancel" class="btn btn-secondary">Keep Ticket</button>
+        <button type="button" id="btn-confirm-cancel" class="btn btn-danger-action">Yes, Cancel Ticket</button>
+      </div>
+    </div>
+  </dialog>
 
   <!-- Auth Modal Dialog -->
   <dialog id="auth-modal" class="auth-dialog" aria-labelledby="auth-modal-title">

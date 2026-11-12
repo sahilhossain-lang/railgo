@@ -614,14 +614,18 @@ const RailGoAPI = (() => {
    */
   async function cancelTicket(pnr) {
     const cleanPNR = String(pnr).trim();
+    let apiData = null;
     try {
       const res = await fetch(`${BASE_URL}/api/cancel_ticket.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pnr: cleanPNR })
       });
-      if (res.ok) {
-        return await res.json();
+      const data = await res.json().catch(() => null);
+      if (res.ok && data && (data.status === 'success' || data.success)) {
+        apiData = data;
+      } else if (data) {
+        return data;
       }
     } catch (e) {
       // Local fallback
@@ -630,12 +634,20 @@ const RailGoAPI = (() => {
     const store = getBookingsStore();
     if (store[cleanPNR]) {
       store[cleanPNR].status = 'Cancelled';
+      store[cleanPNR].booking_status = 'Cancelled';
       store[cleanPNR].status_label = 'Cancelled';
       (store[cleanPNR].passengers || []).forEach(p => p.status = 'Cancelled');
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-      return { status: 'success', message: 'Ticket cancelled successfully.' };
+      sessionStorage.setItem('railgo_bookings', JSON.stringify(store));
     }
-    return { status: 'error', message: 'Record not found to cancel.' };
+
+    if (apiData) {
+      return apiData;
+    }
+
+    if (store[cleanPNR]) {
+      return { status: 'success', success: true, message: 'Ticket cancelled successfully.' };
+    }
+    return { status: 'error', success: false, message: 'Record not found to cancel.' };
   }
 
   /**
